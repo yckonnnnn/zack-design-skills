@@ -612,7 +612,9 @@ table.diff .sw{width:12px;height:12px;border-radius:3px;flex:none;
 
       var pad = vw === 390 ? 32 : 0;                       /* 手机档左右留出设备边距 */
       var avail = pane.clientWidth - 2 - pad;
-      var k = Math.min(1, avail / vw);
+      /* 量化到 4 位小数：全长浮点会让 iframe 被亚像素缩放（内容发虚），
+         且缩放比的末位差异会让预览图出现肉眼不可见但会导致无意义 diff 的抖动 */
+      var k = Math.max(0.05, Math.min(1, Math.round((avail / vw) * 10000) / 10000));
 
       var paneH = pane.clientHeight - 2 - (vw === 390 ? 32 : 0);
       var innerH = Math.max(320, Math.round(paneH / k));

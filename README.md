@@ -221,7 +221,12 @@ zack-design-skills/
 │       └── references/           深挖内容，按需被引用
 ├── examples/before-after/        改前 / 改后 对比演示
 ├── docs/prompt-recipes.md        可直接粘贴的提示词配方
-├── scripts/validate_skills.py    结构校验（CI 会跑）
+├── scripts/
+│   ├── validate_skills.py        结构校验（CI 会跑）
+│   ├── screenshots.py            重出预览图，顺带断言零横向溢出
+│   ├── traffic_snapshot.py       每日记录 star / 克隆 / 下载量
+│   └── make_wechat_card.py       重出群二维码卡片图
+├── metrics/traffic.csv           流量与下载量的长期账本
 └── CREDITS.md                    上游致谢与第三方许可
 ```
 
@@ -231,11 +236,11 @@ zack-design-skills/
 
 ## 加个群
 
-遇到问题、想看我改稿的过程、或者想让我帮你看一眼你的站，进群说。
+遇到问题、想看我改稿的过程、或者想让我帮你看一眼你的站，进群说。技能免费，随便拿。
 
-![Zack 的设计群](assets/wechat-qr.png)
+![[AI 技能交流群]](assets/wechat-qr.png)
 
-> 群二维码 7 天过期，失效了在这里提个 [Issue](https://github.com/yckonnnnn/zack-design-skills/issues) 我重发。
+> 二维码 **2026/10/18 到期**——微信群二维码只有 7 天有效期，这是微信的限制，不是我懒。过期后在这里提个 [Issue](https://github.com/yckonnnnn/zack-design-skills/issues) 我就重发。
 
 ---
 

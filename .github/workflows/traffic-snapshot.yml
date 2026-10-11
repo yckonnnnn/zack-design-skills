@@ -1,0 +1,46 @@
+name: traffic snapshot
+
+# GitHub's traffic API only ever returns a rolling 14-day window, so the
+# history is lost unless you record it. This appends one row per day to
+# metrics/traffic.csv — stars, forks, clones, unique cloners, views, and
+# release-asset downloads.
+
+on:
+  schedule:
+    - cron: "17 3 * * *"   # daily 03:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: traffic-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Record today's numbers
+        env:
+          # The traffic endpoints require push access. The default token is
+          # tried first; if it 403s, set a TRAFFIC_TOKEN secret (a PAT with
+          # `repo` scope) and this picks it up automatically.
+          GITHUB_TOKEN: ${{ secrets.TRAFFIC_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python3 scripts/traffic_snapshot.py
+
+      - name: Commit if changed
+        run: |
+          set -e
+          if git diff --quiet -- metrics/traffic.csv; then
+            echo "no change"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add metrics/traffic.csv
+          git commit -m "chore: 记录 $(date -u +%Y-%m-%d) 的仓库流量数据"
+          git push

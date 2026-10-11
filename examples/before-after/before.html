@@ -631,7 +631,12 @@
       if (!d || d.type !== 'foyton:sync' || d.from !== 'index') return;
       if (Math.abs(window.scrollY - d.y) < 2) return;
       holding = true;
+      /* 同步时必须瞬时跳转：否则 html{scroll-behavior:smooth} 会让两侧
+         互相追着做动画，最终停在不同位置 */
+      var root = document.documentElement, prev = root.style.scrollBehavior;
+      root.style.scrollBehavior = 'auto';
       window.scrollTo(0, d.y);
+      root.style.scrollBehavior = prev;
       setTimeout(function () { holding = false; }, 70);
     });
   })();

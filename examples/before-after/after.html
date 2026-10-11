@@ -334,7 +334,7 @@ table{border-collapse:collapse;width:100%}
 /* ==========================================================================
    BENTO 特性网格
    ========================================================================== */
-.bento-sec{padding:96px 0}
+.bento-sec{padding-top:96px;padding-bottom:96px}
 .sec-head{max-width:66ch;margin-bottom:44px}
 .sec-head h2{font-size:clamp(1.9rem,3.4vw,2.9rem);line-height:1.08;letter-spacing:-.02em;
   margin:14px 0 16px}
@@ -379,9 +379,12 @@ table{border-collapse:collapse;width:100%}
   background:var(--dark-2);border-bottom:1px solid var(--dark-line-soft)}
 .code-head span{font-size:11.5px;color:var(--dark-muted);font-family:var(--font-mono)}
 .code-head .ic{color:var(--accent-on-dark);margin-right:2px}
-.code-body{background:var(--dark);padding:14px;overflow:auto;flex:1}
+.code-body{background:var(--dark);padding:14px;overflow:auto;flex:1;
+  display:flex;flex-direction:column}
 .code-body pre{font-family:var(--font-mono);font-size:12.5px;line-height:1.75;
   color:#D8D2C6;white-space:pre}
+.code-foot{margin-top:auto;padding-top:11px;border-top:1px solid var(--dark-line-soft);
+  font-family:var(--font-mono);font-size:11px;line-height:1.5;color:#7F7A6E}
 .tk-key{color:#E8B872}
 .tk-str{color:#8FBF8A}
 .tk-com{color:#6E6A60}
@@ -424,7 +427,7 @@ table{border-collapse:collapse;width:100%}
   .safe-list{grid-template-columns:repeat(2,1fr)}
 }
 @media (max-width:620px){
-  .bento-sec{padding:64px 0}
+  .bento-sec{padding-top:64px;padding-bottom:64px}
   .bento{grid-template-columns:1fr}
   .b-route,.b-models,.b-code,.b-cost,.b-quote,.b-alert,.b-safe{grid-column:1/-1;grid-row:auto}
   .safe-list{grid-template-columns:1fr}
@@ -470,7 +473,7 @@ table{border-collapse:collapse;width:100%}
 /* ==========================================================================
    定价
    ========================================================================== */
-.pricing{padding:96px 0}
+.pricing{padding-top:96px;padding-bottom:96px}
 .tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:stretch}
 .tier{
   background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r-lg);
@@ -520,12 +523,12 @@ table{border-collapse:collapse;width:100%}
 
 @media (max-width:900px){.tiers{grid-template-columns:1fr;gap:14px}
   .tier.rec{order:-1}}
-@media (max-width:620px){.pricing{padding:64px 0}.cmp th,.cmp td{padding:11px 16px}}
+@media (max-width:620px){.pricing{padding-top:64px;padding-bottom:64px}.cmp th,.cmp td{padding:11px 16px}}
 
 /* ==========================================================================
    FAQ
    ========================================================================== */
-.faq{padding:0 0 96px}
+.faq{padding-bottom:96px}
 .faq-grid{display:grid;grid-template-columns:.72fr 1.28fr;gap:56px;align-items:start}
 .faq-grid h2{font-size:clamp(1.8rem,3vw,2.5rem);line-height:1.08;letter-spacing:-.02em;
   margin:14px 0 16px}
@@ -545,12 +548,12 @@ table{border-collapse:collapse;width:100%}
 .faq-a{padding:0 4px 22px;font-size:15.5px;color:var(--muted);max-width:70ch;line-height:1.65}
 .faq-a b{color:var(--ink);font-weight:600}
 @media (max-width:900px){.faq-grid{grid-template-columns:1fr;gap:32px}
-  .faq{padding:0 0 64px}}
+  .faq{padding-bottom:64px}}
 
 /* ==========================================================================
    CTA + 页脚
    ========================================================================== */
-.cta-sec{padding:0 0 96px}
+.cta-sec{padding-bottom:96px}
 .cta-panel{
   background:var(--ink);border-radius:var(--r-xl);padding:56px;
   display:grid;grid-template-columns:1.25fr 1fr;gap:48px;align-items:center;
@@ -586,7 +589,7 @@ table{border-collapse:collapse;width:100%}
   .foot-about{grid-column:1/-1}
 }
 @media (max-width:620px){
-  .cta-sec{padding:0 0 64px}
+  .cta-sec{padding-bottom:64px}
   .site-foot{padding:44px 0 24px}
   .foot-bottom nav{margin-left:0}
 }
@@ -900,6 +903,7 @@ html{scroll-behavior:smooth}
     <span class="tk-fn">api_key</span>=<span class="tk-str">"fk_live_8a…c21"</span>,
 )
 <span class="tk-com"># 其余 SDK 代码无需改动</span></pre>
+        <p class="code-foot">兼容 /v1/chat/completions · 官方 SDK：Python / Node / Go / Java</p>
       </div>
     </article>
 
@@ -1330,7 +1334,12 @@ html{scroll-behavior:smooth}
       if (!d || d.type !== 'foyton:sync' || d.from !== 'index') return;
       if (Math.abs(window.scrollY - d.y) < 2) return;
       holding = true;
+      /* 同步时必须瞬时跳转：否则 html{scroll-behavior:smooth} 会让两侧
+         互相追着做动画，最终停在不同位置 */
+      var root = document.documentElement, prev = root.style.scrollBehavior;
+      root.style.scrollBehavior = 'auto';
       window.scrollTo(0, d.y);
+      root.style.scrollBehavior = prev;
       setTimeout(function () { holding = false; }, 70);
     });
   }

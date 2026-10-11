@@ -93,7 +93,7 @@ table{border-collapse:collapse;width:100%}
   display:grid;place-items:center;flex:none}
 .top-in .mark i{width:6px;height:6px;border-radius:2px;background:var(--accent);display:block}
 .top-in b{color:var(--ink);font-weight:600}
-.top-in span{margin-left:auto}
+.top-in > span:last-child{margin-left:auto}
 
 .hero{padding:26px 0 30px;display:grid;grid-template-columns:1.28fr .72fr;gap:52px;
   align-items:end}
@@ -128,7 +128,8 @@ table{border-collapse:collapse;width:100%}
   border-bottom:1px solid var(--line-soft);
   margin-top:34px;
 }
-.toolbar-in{display:flex;align-items:center;gap:28px;flex-wrap:wrap;padding:12px 0}
+.toolbar-in{display:flex;align-items:center;gap:28px;flex-wrap:wrap;
+  padding-top:12px;padding-bottom:12px}
 .seg{display:flex;align-items:center;gap:10px;border:0;min-width:0}
 .seg > legend{float:left;font-size:12.5px;color:var(--faint);font-weight:600;
   letter-spacing:.03em;padding:0;margin-right:2px}
@@ -170,7 +171,7 @@ table{border-collapse:collapse;width:100%}
 /* ==========================================================================
    舞台：两个 iframe
    ========================================================================== */
-.stage-wrap{padding:26px 0 0}
+.stage-wrap{padding-top:26px}
 .stage{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
 .stage[data-mode="before"],.stage[data-mode="after"]{grid-template-columns:1fr}
 .stage[data-mode="before"] .frame[data-side="after"],
@@ -209,7 +210,16 @@ table{border-collapse:collapse;width:100%}
   .stage,.stage[data-mode="before"],.stage[data-mode="after"]{grid-template-columns:1fr;gap:26px}
   :root{--stage-h:560px}
 }
-@media (max-width:600px){:root{--stage-h:460px}}
+@media (max-width:600px){
+  :root{--stage-h:460px}
+  .toolbar-in{gap:14px;padding-top:14px;padding-bottom:14px}
+  .seg{width:100%;flex-direction:column;align-items:stretch;gap:6px}
+  .seg > legend{float:none;margin:0}
+  .seg-body{overflow-x:auto;scrollbar-width:none}
+  .seg-body::-webkit-scrollbar{display:none}
+  .seg label{flex:1;justify-content:center}
+  .tool-right{margin-left:0;width:100%;justify-content:space-between}
+}
 
 .frames-hint{
   margin-top:14px;font-size:13px;color:var(--faint);display:flex;align-items:center;gap:8px;
@@ -219,7 +229,7 @@ table{border-collapse:collapse;width:100%}
 /* ==========================================================================
    对照表
    ========================================================================== */
-.changes{padding:76px 0 90px}
+.changes{padding-top:76px;padding-bottom:90px}
 .changes-head{display:flex;align-items:flex-end;gap:28px;flex-wrap:wrap;
   padding-bottom:22px;border-bottom:1px solid var(--line-soft);margin-bottom:0}
 .changes-head h2{font-size:clamp(1.7rem,2.8vw,2.3rem);line-height:1.1}
@@ -584,15 +594,21 @@ table.diff .sw{width:12px;height:12px;border-radius:3px;flex:none;
   var state = { vw: 1440, mode: 'both', sync: false };
   var lockUntil = 0;
 
-  /* ---------- 布局：按目标宽度真实渲染 iframe，再等比缩放进面板 ---------- */
+  /* ---------- 布局：按目标宽度真实渲染 iframe，再等比缩放进面板 ----------
+     注意：必须先写 data-mode / data-vw 再测量。否则从「对比」切到「只看改后」时
+     读到的是旧的半宽面板，iframe 会被算成 49% 并左对齐，右半边留白。 */
   function layout() {
     var vw = state.vw;
-    var single = state.mode !== 'both';
+
+    stage.dataset.mode = state.mode;
+    stage.dataset.vw = String(vw);
+
+    var shown = 1;
 
     Object.keys(frames).forEach(function (side) {
       var frame = frames[side];
       var pane  = panes[side];
-      if (!pane || !pane.clientWidth) return;
+      if (!pane || !pane.clientWidth) return;              /* 该侧已隐藏 */
 
       var pad = vw === 390 ? 32 : 0;                       /* 手机档左右留出设备边距 */
       var avail = pane.clientWidth - 2 - pad;
@@ -609,11 +625,10 @@ table.diff .sw{width:12px;height:12px;border-radius:3px;flex:none;
       frame.style.left = offset + 'px';
       frame.style.top  = (vw === 390 ? 16 : 0) + 'px';
 
-      if (side === 'before') readout.textContent = '缩放 ' + Math.round(k * 100) + '%';
+      shown = k;
     });
 
-    stage.dataset.mode = state.mode;
-    stage.dataset.vw = String(vw);
+    readout.textContent = '缩放 ' + Math.round(shown * 100) + '%';
   }
 
   /* ---------- 控件 ---------- */

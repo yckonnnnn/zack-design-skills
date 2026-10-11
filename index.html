@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zack Design Skills — 让网页不像 AI 做的</title>
+<meta name="description" content="8 个给 AI 编码工具用的设计技能 + 60 条可执行判断标准，专治网页「一眼就是 AI 做的」。装进 Claude Code / Cursor / Codex 即用，MIT 开源。">
+<meta property="og:title" content="Zack Design Skills — 让网页不像 AI 做的">
+<meta property="og:description" content="8 个设计技能 + 60 条可执行判断标准，专治网页 AI 味。">
+<meta property="og:image" content="assets/social-preview.png">
+<meta property="og:type" content="website">
+<style>
+:root{
+  --bg:#FBF9F4; --surface:#FFFFFF; --surface-2:#F4F1E9;
+  --ink:#16150F; --ink-2:#3A382E; --muted:#6E6A5C; --faint:#96917F;
+  --accent:#D8F32A; --accent-ink:#16150F; --accent-deep:#7A8A12;
+  --line:rgba(22,21,15,.10); --line-soft:rgba(22,21,15,.06);
+  --font-display:"Songti SC","Source Han Serif SC",ui-serif,Georgia,"Times New Roman",serif;
+  --font-ui:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",-apple-system,system-ui,sans-serif;
+  --font-mono:ui-monospace,"SF Mono",Menlo,monospace;
+  --t-fast:140ms; --ease:cubic-bezier(.22,1,.36,1);
+  --shadow-1:0 1px 2px rgba(22,21,15,.04), 0 4px 12px -2px rgba(22,21,15,.05);
+  --shadow-2:0 2px 4px rgba(22,21,15,.04), 0 14px 32px -8px rgba(22,21,15,.08);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:var(--font-ui);font-size:17px;line-height:1.65;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  font-feature-settings:'kern' 1,'liga' 1;
+}
+h1,h2,h3{margin:0;font-family:var(--font-display);font-weight:600;text-wrap:balance}
+p{margin:0;text-wrap:pretty}
+a{color:inherit}
+.wrap{max-width:1180px;margin-inline:auto;padding:0 clamp(20px,4vw,40px)}
+.eyebrow{
+  font-family:var(--font-mono);font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);display:inline-flex;align-items:center;gap:9px;
+}
+.eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);
+  box-shadow:0 0 0 3px rgba(216,243,42,.3);flex:none}
+:focus-visible{outline:2px solid var(--accent-deep);outline-offset:3px;border-radius:4px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* ---------- header ---------- */
+.head{position:sticky;top:0;z-index:60;background:rgba(251,249,244,.86);
+  backdrop-filter:saturate(180%) blur(14px);-webkit-backdrop-filter:saturate(180%) blur(14px);
+  border-bottom:1px solid var(--line-soft)}
+.head-in{display:flex;align-items:center;gap:20px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;
+  letter-spacing:-.01em;text-decoration:none}
+.brand i{width:20px;height:20px;border-radius:5px;background:var(--ink);display:grid;
+  place-items:center;flex:none}
+.brand i::after{content:"";width:7px;height:7px;border-radius:2px;background:var(--accent)}
+.head-links{margin-left:auto;display:flex;align-items:center;gap:8px}
+.head-links a{font-size:14.5px;color:var(--muted);text-decoration:none;padding:7px 11px;
+  border-radius:8px;transition:color var(--t-fast) var(--ease),background-color var(--t-fast) var(--ease)}
+.head-links a:hover{color:var(--ink);background:var(--surface-2)}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;gap:9px;height:50px;padding:0 26px;border-radius:10px;
+  font-size:16px;font-weight:500;text-decoration:none;border:1px solid transparent;cursor:pointer;
+  transition:transform var(--t-fast) var(--ease),background-color var(--t-fast) var(--ease),
+             border-color var(--t-fast) var(--ease),box-shadow var(--t-fast) var(--ease)}
+.btn-accent{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn-accent:hover{transform:translateY(-1px);box-shadow:0 6px 18px -6px rgba(122,138,18,.5)}
+.btn-ghost{background:var(--surface);border-color:var(--line);color:var(--ink)}
+.btn-ghost:hover{border-color:rgba(22,21,15,.24);transform:translateY(-1px)}
+.btn svg{width:17px;height:17px;flex:none}
+.btn-sm{height:38px;padding:0 15px;font-size:14px;border-radius:8px}
+
+/* ---------- hero ---------- */
+.hero{padding:clamp(56px,7vw,104px) 0 clamp(48px,6vw,80px)}
+.hero-grid{display:grid;grid-template-columns:1.28fr 1fr;gap:clamp(32px,4vw,64px);align-items:start}
+.hero h1{font-size:clamp(2.5rem,6vw,5rem);line-height:1.02;letter-spacing:-.03em;margin:22px 0 0}
+.hero h1 .hl{background:var(--accent);padding:0 .08em;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.hero .lede{margin-top:26px;font-size:19px;line-height:1.65;color:var(--ink-2);max-width:56ch}
+.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
+.hero-proof{display:grid;grid-template-columns:repeat(3,auto);gap:0 40px;margin-top:44px;
+  padding-top:26px;border-top:1px solid var(--line-soft);justify-content:start}
+.hero-proof div{display:flex;flex-direction:column;gap:3px}
+.hero-proof dt{font-size:12.5px;color:var(--faint)}
+.hero-proof dd{margin:0;font-family:var(--font-display);font-size:26px;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums}
+
+/* problem card */
+.problem{background:var(--ink);color:#F1EEE5;border-radius:16px;padding:clamp(26px,3vw,36px)}
+.problem h2{font-size:21px;color:#fff;letter-spacing:-.01em}
+.problem p{font-size:15px;color:#B9B4A4;margin-top:10px;line-height:1.6}
+.problem ul{list-style:none;margin:22px 0 0;padding:0;display:grid;gap:11px}
+.problem li{display:flex;gap:11px;font-size:15px;line-height:1.5;color:#E4E0D4}
+.problem li::before{content:"";width:6px;height:6px;border-radius:1px;background:var(--accent);
+  flex:none;margin-top:9px}
+.problem .foot{margin-top:24px;padding-top:18px;border-top:1px solid rgba(255,255,255,.12);
+  font-size:14px;color:#9E9988}
+
+/* ---------- sections ---------- */
+section{padding:clamp(56px,7vw,96px) 0}
+.sec-head{max-width:60ch}
+.sec-head h2{font-size:clamp(1.9rem,3.4vw,2.9rem);line-height:1.08;letter-spacing:-.025em;margin-top:16px}
+.sec-head p{margin-top:16px;font-size:17.5px;line-height:1.7;color:var(--ink-2)}
+
+/* skills grid */
+.skills{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:44px}
+.skill{background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;
+  padding:26px 28px;transition:border-color var(--t-fast) var(--ease),transform var(--t-fast) var(--ease)}
+.skill:hover{border-color:rgba(22,21,15,.2);transform:translateY(-2px)}
+.skill code{font-family:var(--font-mono);font-size:13.5px;color:var(--accent-deep);font-weight:600}
+.skill h3{font-size:19px;margin-top:12px}
+.skill p{font-size:15px;line-height:1.62;color:var(--muted);margin-top:9px}
+.skill.wide{grid-column:span 2;display:grid;grid-template-columns:1fr 1.3fr;gap:32px;align-items:center;
+  background:var(--surface-2)}
+
+/* compare */
+.compare{margin-top:44px}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.shot{background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;overflow:hidden;
+  box-shadow:var(--shadow-1)}
+.shot-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 18px;border-bottom:1px solid var(--line-soft)}
+.shot-bar b{font-size:14.5px;font-weight:600}
+.shot-bar span{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--faint)}
+.tag-bad{color:#A2543A}
+.tag-good{color:var(--accent-deep)}
+.shot img{display:block;width:100%;height:auto}
+.compare-cta{display:flex;flex-wrap:wrap;align-items:center;gap:16px;margin-top:26px}
+.compare-cta .note{font-size:15px;color:var(--muted)}
+
+/* doctrine */
+.moves{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:44px}
+.move{border-top:2px solid var(--ink);padding-top:20px}
+.move b{display:block;font-family:var(--font-display);font-size:22px;letter-spacing:-.01em}
+.move p{font-size:15px;line-height:1.65;color:var(--muted);margin-top:12px}
+
+/* table */
+.tbl-wrap{margin-top:40px;background:var(--surface);border:1px solid var(--line-soft);
+  border-radius:14px;overflow:hidden}
+.tbl-scroll{overflow-x:auto}
+table{width:100%;min-width:600px;border-collapse:collapse;font-size:15px}
+caption{text-align:left;padding:20px 24px 0;font-size:14px;color:var(--faint)}
+th,td{padding:15px 24px;text-align:left;border-bottom:1px solid var(--line-soft)}
+thead th{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--faint);font-weight:600;background:var(--surface-2)}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--surface-2)}
+td:first-child{color:var(--ink-2)}
+td:last-child{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* install */
+.install{margin-top:36px;background:var(--ink);border-radius:14px;padding:26px 28px;color:#F1EEE5}
+.install-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.install-head b{font-size:15px;color:#fff}
+.install-head span{font-family:var(--font-mono);font-size:12px;color:#9E9988}
+pre{margin:16px 0 0;overflow-x:auto;font-family:var(--font-mono);font-size:13.5px;
+  line-height:1.75;color:#D8F32A}
+.copy{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:#F1EEE5;
+  height:36px;padding:0 14px;border-radius:8px;font-size:13.5px;cursor:pointer;font-family:var(--font-ui);
+  transition:background-color var(--t-fast) var(--ease)}
+.copy:hover{background:rgba(255,255,255,.18)}
+
+/* footer */
+.foot{border-top:1px solid var(--line-soft);padding:40px 0 56px;margin-top:24px}
+.foot-in{display:flex;flex-wrap:wrap;align-items:center;gap:16px;font-size:14.5px;color:var(--muted)}
+.foot-in a{text-decoration:none;color:var(--ink-2)}
+.foot-in a:hover{color:var(--ink);text-decoration:underline}
+.foot-in .sp{margin-left:auto}
+
+/* reveal */
+.js .reveal{opacity:0;transform:translateY(10px);
+  transition:opacity 380ms var(--ease),transform 380ms var(--ease)}
+.js .reveal.in{opacity:1;transform:none}
+
+@media (max-width:1000px){
+  .hero-grid{grid-template-columns:1fr;gap:40px}
+  .skills{grid-template-columns:1fr}
+  .skill.wide{grid-column:span 1;grid-template-columns:1fr;gap:16px}
+  .moves{grid-template-columns:1fr;gap:24px}
+}
+@media (max-width:760px){
+  .compare-grid{grid-template-columns:1fr}
+  .hero-proof{grid-template-columns:1fr 1fr;gap:20px 24px}
+  .head-links a:not(.btn){display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+  .js .reveal{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+<script>document.documentElement.className += ' js';</script>
+
+<header class="head">
+  <div class="wrap head-in">
+    <a class="brand" href="./"><i aria-hidden="true"></i>Zack Design Skills</a>
+    <nav class="head-links" aria-label="主导航">
+      <a href="#skills">技能</a>
+      <a href="#compare">对比</a>
+      <a href="#install">安装</a>
+      <a class="btn btn-accent btn-sm" href="https://github.com/yckonnnnn/zack-design-skills">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow">8 个设计技能 · 60 条判断标准 · MIT</p>
+        <h1>让网页不像<br><span class="hl">AI 做的</span></h1>
+        <p class="lede">
+          一套给 AI 编码工具用的设计技能包。把「一眼看出是模板生成」这件事，
+          拆成 60 条可以逐条检查、逐条修掉的规则——而不是一句没法执行的「设计好看点」。
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-accent" href="examples/before-after/">
+            看改前 vs 改后
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path d="M4 10h12M11 5l5 5-5 5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+          <a class="btn btn-ghost" href="https://github.com/yckonnnnn/zack-design-skills">在 GitHub 上看</a>
+        </div>
+        <dl class="hero-proof">
+          <div><dt>技能</dt><dd>8 个</dd></div>
+          <div><dt>可执行标准</dt><dd>60 条</dd></div>
+          <div><dt>依赖</dt><dd>无</dd></div>
+        </dl>
+      </div>
+
+      <aside class="problem reveal">
+        <h2>你的网站有没有这些毛病</h2>
+        <p>不用看代码，中 3 条以上就该往下读了。</p>
+        <ul>
+          <li>首屏标题在电脑上占了 3 行以上</li>
+          <li>有渐变文字，或紫蓝色渐变背景</li>
+          <li>页面上有「赋能」「触手可及」</li>
+          <li>全是圆角胶囊 + 重阴影，图标是 emoji</li>
+          <li>三张一模一样宽的卡片</li>
+          <li>每一屏的上下留白完全一样</li>
+          <li>价格页写着「—」或「联系我们」</li>
+          <li>Tab 键按下去看不见焦点在哪</li>
+        </ul>
+        <p class="foot">这些不是风格问题，是「没有判断」的证据。</p>
+      </aside>
+    </div>
+  </section>
+
+  <section id="skills">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <p class="eyebrow">里面有什么</p>
+        <h2>一个总入口，七个<div>各管一段的技能</div></h2>
+        <p>
+          上游那些设计技能最大的毛病是互相打架——同一件事，一个说必须做，一个说绝对禁止。
+          装三个等于没装。这套东西额外给出了一条<b>冲突裁决顺序</b>。
+        </p>
+      </div>
+
+      <div class="skills">
+        <article class="skill wide reveal">
+          <div>
+            <code>zack-design-router</code>
+            <h3>总入口与冲突裁决</h3>
+          </div>
+          <p>先判定任务类型（新建 / 改版 / 还原 / 评审），再决定加载哪个技能。并定义六级优先级：平台约束 &gt; 品牌资产 &gt; 项目设计系统 &gt; 从需求推导的方向 &gt; 通用规则 &gt; 流行做法。高优先级出现时，低优先级直接作废。</p>
+        </article>
+        <article class="skill reveal">
+          <code>zack-anti-ai-look</code>
+          <h3>消灭 AI 味</h3>
+          <p>旗舰技能。60 条清单、P0/P1/P2 分级、修复优先级、三段前后对照，附文案重写与状态设计两份深挖。</p>
+        </article>
+        <article class="skill reveal">
+          <code>zack-hero-and-pricing</code>
+          <h3>首屏与价格页</h3>
+          <p>决定转化的两屏。首屏的 7 种形式选择、标题行数约束、CTA 层级；价格三档结构、锚定、真实对比表。</p>
+        </article>
+        <article class="skill reveal">
+          <code>zack-typography-and-color</code>
+          <h3>字体与色彩系统</h3>
+          <p>比例字号阶梯、流体字号公式、负字距规则、6 级中性色阶、阴影配方，以及一份中文排版细则。</p>
+        </article>
+        <article class="skill reveal">
+          <code>zack-layout-and-rhythm</code>
+          <h3>布局与节奏</h3>
+          <p>间距尺度、垂直节奏的疏密设计、bento 无空洞排版、10 种版式形式库、叠压在什么宽度必须取消。</p>
+        </article>
+        <article class="skill reveal">
+          <code>zack-motion-taste</code>
+          <h3>动效判断</h3>
+          <p>默认答案是「不动」。四个必答问题、时长与缓动对照表、打断处理、性能预算、reduced-motion 降级。</p>
+        </article>
+        <article class="skill reveal">
+          <code>zack-figma-to-code</code>
+          <h3>Figma 还原</h3>
+          <p>MCP 取数顺序、令牌与设计稿冲突时谁赢、项目约定翻译、用 Playwright 量而不是用眼睛估。</p>
+        </article>
+        <article class="skill reveal">
+          <code>zack-redesign-audit</code>
+          <h3>改版与评审</h3>
+          <p>定范围 → 扫描 → 诊断表 → 最小化修复 → 三宽度验收 → 交付报告，含只读评审模式和客户诊断话术。</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="compare">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <p class="eyebrow">看效果</p>
+        <h2>同一个产品，两种设计判断</h2>
+        <p>
+          同一份文案、同样的价格和 SLA，两份文件。左边是 AI 生成的平均水平，右边是按这套规则重写的版本。
+          差别不在审美，在有没有做决定。
+        </p>
+      </div>
+
+      <div class="compare">
+        <div class="compare-grid">
+          <figure class="shot reveal" style="margin:0">
+            <div class="shot-bar"><b class="tag-bad">改前 · AI 味</b><span>before</span></div>
+            <img src="examples/before-after/preview-before.png" width="1440" height="900"
+                 alt="改前：紫蓝渐变背景、居中布局、6 行标题、emoji 图标、三张等宽卡片">
+          </figure>
+          <figure class="shot reveal" style="margin:0">
+            <div class="shot-bar"><b class="tag-good">改后 · 有判断</b><span>after</span></div>
+            <img src="examples/before-after/preview-after.png" width="1440" height="900"
+                 loading="lazy" alt="改后：暖白底、左对齐、2 行标题、真实产品界面、单一强调色">
+          </figure>
+        </div>
+        <div class="compare-cta">
+          <a class="btn btn-accent" href="examples/before-after/">
+            打开完整对比页
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path d="M4 10h12M11 5l5 5-5 5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+          <span class="note">带视口切换、只看改前/只看改后开关，以及 21 处改动的对照表和「为什么」。</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <p class="eyebrow">三条修法</p>
+        <h2>AI 味不能靠「加东西」修掉</h2>
+        <p>加更多动效和渐变，只会得到花哨的 AI 味。真正的修法是删掉默认值，让每一个留存的元素都有理由。</p>
+      </div>
+      <div class="moves">
+        <div class="move reveal"><b>打破均匀</b><p>平均值之所以是平均值，因为处处等量。制造不等量：大小、疏密、轻重。每一屏同样的留白就是没有层级。</p></div>
+        <div class="move reveal"><b>建立判断</b><p>每个选择都要能回答「为什么是这个值，不是别的」。答不上来就是默认值，而默认值就是 AI 味。</p></div>
+        <div class="move reveal"><b>说人话</b><p>空话是最便宜、也最容易修的 AI 味信号，所以永远排第一。改文案不动设计，收益却最大。</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <p class="eyebrow">判断标准</p>
+        <h2>把话说死，才能被验收</h2>
+        <p>这套东西的价值不在于「提到要注意排版」，在于给出可检查的阈值。</p>
+      </div>
+      <div class="tbl-wrap reveal">
+        <div class="tbl-scroll">
+          <table>
+            <caption>摘自 skills/zack-anti-ai-look/references/checklist.md</caption>
+            <thead>
+              <tr><th scope="col">判断项</th><th scope="col">具体数字</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>首屏标题在 1440px 下最多几行</td><td>2 行</td></tr>
+              <tr><td>一页允许几个字号的强调色</td><td>1 个</td></tr>
+              <tr><td>字号阶梯</td><td>比例，不是等差</td></tr>
+              <tr><td>区块间距 ÷ 组内间距</td><td>≥ 3</td></tr>
+              <tr><td>阴影总透明度</td><td>&lt; 0.12</td></tr>
+              <tr><td>微反馈动效时长</td><td>80–140ms</td></tr>
+              <tr><td>退出动画相对进入</td><td>快 30–50%</td></tr>
+              <tr><td>好改版的净行数</td><td>通常是负的</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="install">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <p class="eyebrow">安装</p>
+        <h2>纯 Markdown，不需要联网</h2>
+        <p>没有依赖、没有 API key、不需要构建。克隆下来把技能目录软链到你工具的 skills 目录即可。</p>
+      </div>
+      <div class="install reveal">
+        <div class="install-head">
+          <b>Claude Code</b>
+          <button class="copy" type="button" data-copy="git clone https://github.com/yckonnnnn/zack-design-skills.git ~/.claude/skills/zack-design-skills
+cd ~/.claude/skills/zack-design-skills/skills
+for d in */; do ln -sfn &quot;$PWD/${d%/}&quot; ~/.claude/skills/&quot;${d%/}&quot;; done">复制</button>
+        </div>
+        <pre><code>git clone https://github.com/yckonnnnn/zack-design-skills.git ~/.claude/skills/zack-design-skills
+cd ~/.claude/skills/zack-design-skills/skills
+for d in */; do ln -sfn "$PWD/${d%/}" ~/.claude/skills/"${d%/}"; done</code></pre>
+      </div>
+      <p style="margin-top:22px;font-size:15.5px;color:var(--muted)">
+        Cursor 把 <code style="font-family:var(--font-mono);font-size:13.5px">skills/*</code> 复制到
+        <code style="font-family:var(--font-mono);font-size:13.5px">~/.cursor/skills/</code>，
+        Codex 复制到 <code style="font-family:var(--font-mono);font-size:13.5px">~/.codex/skills/</code>。
+        装完说一句「帮我看看我这个网站为什么看起来像 AI 做的」就生效了。
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <span>Zack Design Skills · v1.0 · MIT</span>
+    <span class="sp"></span>
+    <a href="examples/before-after/">对比演示</a>
+    <a href="docs/prompt-recipes.md">提示词配方</a>
+    <a href="https://github.com/yckonnnnn/zack-design-skills">GitHub</a>
+    <a href="https://github.com/yckonnnnn/zack-design-skills/blob/main/CREDITS.md">致谢</a>
+  </div>
+</footer>
+
+<script>
+(function () {
+  // copy buttons
+  document.querySelectorAll('.copy').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var text = btn.getAttribute('data-copy') || '';
+      var done = function () {
+        var old = btn.textContent;
+        btn.textContent = '已复制';
+        setTimeout(function () { btn.textContent = old; }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, done);
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta); done();
+      }
+    });
+  });
+
+  // scroll reveal — subtle, and skipped entirely under reduced-motion
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var items = document.querySelectorAll('.reveal');
+  if (reduced || !('IntersectionObserver' in window)) {
+    items.forEach(function (el) { el.classList.add('in'); });
+    return;
+  }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+  items.forEach(function (el) { io.observe(el); });
+})();
+</script>
+</body>
+</html>

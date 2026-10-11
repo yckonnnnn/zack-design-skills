@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Foyton — 统一接入 47 个前沿模型，用量与账单可核账</title>
+<meta name="description" content="Foyton 把 11 家厂商的 47 个模型收敛成一个 OpenAI 兼容接口。密钥轮换不停机，用量精确到 Token，30 天滚动可用性 99.98%。">
+<script>document.documentElement.className += ' js';</script>
+<style>
+/* ==========================================================================
+   after.html — Foyton 落地页（有判断的版本）
+   设计规则：单一琥珀色强调 / 暖近黑中性色 / 大面不用渐变 /
+             发丝级描边 + 极淡扩散投影 / 排版对比度 / 变化的分区节奏
+   ========================================================================== */
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  /* 表面：暖白阶差，靠色阶而不是到处画线 */
+  --bg:#FAF8F3;
+  --surface:#FFFFFF;
+  --surface-2:#F4F0E8;
+  --surface-3:#EBE5DA;
+  --line:rgba(23,21,15,.10);          /* 发丝描边 */
+  --line-soft:rgba(23,21,15,.055);
+  --line-strong:rgba(23,21,15,.16);
+
+  /* 墨色：暖近黑，不用纯黑 */
+  --ink:#17150F;
+  --ink-2:#3B372C;
+  --muted:#6E6656;
+  --faint:#9A9182;
+
+  /* 深色面 */
+  --dark:#131210;
+  --dark-2:#1C1A16;
+  --dark-3:#242119;
+  --dark-line:rgba(255,255,255,.10);
+  --dark-line-soft:rgba(255,255,255,.06);
+  --dark-ink:#F2EEE5;
+  --dark-muted:#A29A8B;
+
+  /* 唯一强调色：克制的琥珀 */
+  --accent:#E29A2E;
+  --accent-deep:#8A4A08;              /* 浅底上的强调文字，对比度 7.1:1 */
+  --accent-mid:#B9720F;
+  --accent-soft:rgba(226,154,46,.14);
+  --accent-on-dark:#F3B75A;
+
+  --ease:cubic-bezier(.22,1,.36,1);
+  --t-fast:140ms;
+  --t-base:200ms;
+
+  /* 投影：所有颜色 alpha ≤ 0.06，靠大模糊半径扩散 */
+  --shadow-1:0 1px 2px rgba(23,21,15,.035), 0 12px 28px -16px rgba(23,21,15,.055);
+  --shadow-2:0 2px 4px rgba(23,21,15,.03), 0 30px 64px -34px rgba(23,21,15,.06);
+
+  --r-sm:8px; --r:12px; --r-lg:16px; --r-xl:22px;
+
+  --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,"Helvetica Neue",Arial,
+            "PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --font-display:ui-serif,Georgia,"Times New Roman","Songti SC","Source Han Serif SC",serif;
+  --font-mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+}
+
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--bg);
+  color:var(--ink-2);
+  font-family:var(--font-ui);
+  font-size:17px;
+  line-height:1.6;
+  font-feature-settings:'kern' 1,'liga' 1;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+@media (max-width:600px){body{font-size:16px}}
+
+h1,h2,h3,h4{
+  font-family:var(--font-display);
+  color:var(--ink);
+  font-weight:600;
+  letter-spacing:-.005em;
+  text-wrap:balance;                 /* 标题断行更均衡 */
+}
+p{text-wrap:pretty}
+img,svg{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+ul{list-style:none}
+table{border-collapse:collapse;width:100%}
+
+/* 表格数字：等宽数字，价格和指标对齐 */
+.tnum{font-feature-settings:'kern' 1,'liga' 1,'tnum' 1;font-variant-numeric:tabular-nums}
+
+.wrap{width:100%;max-width:1240px;margin:0 auto;padding:0 32px}
+@media (max-width:600px){.wrap{padding:0 20px}}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* ---------- 可见的焦点环 ---------- */
+:focus{outline:none}
+:focus-visible{
+  outline:2px solid var(--accent-deep);
+  outline-offset:3px;
+  border-radius:var(--r-sm);
+}
+.dark :focus-visible,.cta-panel :focus-visible{outline-color:var(--accent-on-dark)}
+
+.skip{
+  position:absolute;left:16px;top:-64px;z-index:200;
+  background:var(--ink);color:var(--bg);
+  padding:10px 18px;border-radius:var(--r-sm);font-size:14px;
+  transition:top var(--t-fast) var(--ease);
+}
+.skip:focus-visible{top:16px}
+
+/* ---------- 图标 ---------- */
+.ic{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;
+    stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.ic-lg{width:20px;height:20px}
+.sprite{display:none}
+
+/* ---------- 通用 ---------- */
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:12.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--accent-deep);
+}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none}
+.lede{max-width:62ch;color:var(--muted);font-size:17px;line-height:1.65}
+
+.rule{height:1px;background:var(--line-soft);border:0}
+
+/* ---------- 按钮 ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  height:46px;padding:0 22px;border-radius:10px;
+  font-size:15px;font-weight:600;letter-spacing:.005em;white-space:nowrap;
+  border:1px solid transparent;
+  transition:background-color var(--t-fast) var(--ease),
+             color var(--t-fast) var(--ease),
+             border-color var(--t-fast) var(--ease),
+             transform var(--t-fast) var(--ease),
+             box-shadow var(--t-base) var(--ease);
+}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn-primary{background:var(--ink);color:#FBF9F4;box-shadow:var(--shadow-1)}
+.btn-primary:hover{background:#000;box-shadow:var(--shadow-2)}
+.btn-accent{background:var(--accent);color:#2A1B04;box-shadow:var(--shadow-1)}
+.btn-accent:hover{background:#EBA53C;box-shadow:var(--shadow-2)}
+.btn-ghost{border-color:var(--line);color:var(--ink);background:var(--surface)}
+.btn-ghost:hover{border-color:var(--line-strong);background:var(--surface)}
+.btn .ic{transition:transform var(--t-base) var(--ease)}
+.btn:hover .ic{transform:translateX(2px)}
+.btn-sm{height:38px;padding:0 16px;font-size:14px;border-radius:9px}
+
+/* ==========================================================================
+   导航
+   ========================================================================== */
+.site-head{
+  position:sticky;top:0;z-index:80;
+  background:rgba(250,248,243,.86);
+  backdrop-filter:saturate(180%) blur(14px);
+  -webkit-backdrop-filter:saturate(180%) blur(14px);
+  border-bottom:1px solid var(--line-soft);
+}
+.head-in{display:flex;align-items:center;gap:36px;height:66px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:17px;
+  letter-spacing:-.01em;color:var(--ink)}
+.brand-mark{width:22px;height:22px;border-radius:6px;background:var(--ink);
+  display:grid;place-items:center;flex:none}
+.brand-mark i{width:7px;height:7px;border-radius:2px;background:var(--accent);display:block}
+.brand em{font-style:normal;font-family:var(--font-display);font-weight:600}
+.head-nav{display:flex;gap:2px;margin-right:auto}
+.head-nav a{
+  padding:8px 12px;border-radius:8px;font-size:14.5px;color:var(--muted);
+  transition:color var(--t-fast) var(--ease),background-color var(--t-fast) var(--ease);
+}
+.head-nav a:hover{color:var(--ink);background:var(--surface-2)}
+.head-cta{display:flex;align-items:center;gap:10px}
+.head-status{
+  display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);
+  padding-right:14px;border-right:1px solid var(--line-soft);margin-right:4px;
+}
+.pulse{width:7px;height:7px;border-radius:50%;background:#3F9E5A;flex:none;
+  box-shadow:0 0 0 3px rgba(63,158,90,.15)}
+.burger{display:none;width:40px;height:40px;border:1px solid var(--line);
+  border-radius:9px;place-items:center;color:var(--ink);background:var(--surface)}
+@media (max-width:1000px){
+  .head-nav,.head-status{display:none}
+  .burger{display:grid}
+}
+.mobile-nav{display:none;border-top:1px solid var(--line-soft);background:var(--bg);
+  padding:10px 0 16px}
+.mobile-nav.open{display:block}
+.mobile-nav a{display:block;padding:11px 32px;font-size:15px;color:var(--ink-2)}
+
+/* ==========================================================================
+   HERO — 非对称编辑式
+   ========================================================================== */
+.hero{padding:76px 0 84px;position:relative}
+.hero-grid{
+  display:grid;
+  grid-template-columns:1.32fr 1fr;   /* 黄金偏斜，不是 1:1 对半 */
+  gap:56px;align-items:center;
+}
+.hero h1{
+  font-size:clamp(2.75rem,6vw,5rem);
+  line-height:1.02;                   /* 展示字紧行距 */
+  letter-spacing:-.022em;
+  margin:20px 0 0;
+}
+.hero .lede{margin-top:22px}
+.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+.hero-proof{
+  display:flex;flex-wrap:wrap;gap:0 26px;margin-top:30px;
+  padding-top:22px;border-top:1px solid var(--line-soft);
+}
+.hero-proof div{display:flex;flex-direction:column;gap:2px}
+.hero-proof dt{font-size:12.5px;color:var(--faint)}
+.hero-proof dd{font-family:var(--font-display);font-size:22px;color:var(--ink)}
+
+/* ---------- 产品界面（SVG/CSS 手绘，非截图） ---------- */
+.surface{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--r-xl);
+  box-shadow:var(--shadow-2);
+  overflow:hidden;
+}
+.surface-bar{
+  display:flex;align-items:center;gap:7px;
+  padding:11px 14px;border-bottom:1px solid var(--line-soft);
+  background:var(--surface-2);
+}
+.surface-bar .d{width:9px;height:9px;border-radius:50%;background:var(--surface-3);flex:none}
+.surface-title{
+  margin-left:8px;font-size:12.5px;color:var(--muted);font-weight:600;letter-spacing:.01em;
+}
+.surface-live{
+  margin-left:auto;display:inline-flex;align-items:center;gap:5px;
+  font-size:11.5px;color:var(--muted);
+  background:var(--surface);border:1px solid var(--line-soft);
+  padding:2px 8px;border-radius:99px;
+}
+.surface-live i{width:5px;height:5px;border-radius:50%;background:#3F9E5A;display:block}
+.surface-body{padding:16px 16px 14px}
+
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line-soft);
+  border:1px solid var(--line-soft);border-radius:var(--r);overflow:hidden}
+.kpi{background:var(--surface);padding:11px 12px}
+.kpi > span{display:block}
+.kpi-k{font-size:11.5px;color:var(--faint);letter-spacing:.01em}
+.kpi-v{font-family:var(--font-display);font-size:24px;color:var(--ink);line-height:1.2;
+  margin-top:3px;letter-spacing:-.01em}
+.kpi-v .u{font-family:var(--font-ui);font-size:12px;color:var(--muted);margin-left:3px}
+.kpi-d{font-size:11.5px;margin-top:2px}
+.up{color:#2F7D48}
+.down{color:var(--accent-deep)}
+
+.chart{margin-top:14px}
+.chart-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
+.chart-head span:first-child{font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.legend{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--faint)}
+.legend i{width:8px;height:2px;border-radius:2px;background:var(--accent);display:block}
+.chart svg{width:100%;height:auto}
+.axis{display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint);
+  margin-top:2px}
+
+.surface-split{display:grid;grid-template-columns:1.45fr 1fr;gap:0;margin-top:16px;
+  padding-top:14px;border-top:1px solid var(--line-soft)}
+.surface-split > div:first-child{padding-right:16px}
+.surface-split > div:last-child{padding-left:16px;border-left:1px solid var(--line-soft)}
+.mini-h{font-size:11.5px;color:var(--faint);margin-bottom:7px;display:flex;
+  justify-content:space-between;align-items:baseline}
+.mini-h b{font-weight:600;color:var(--accent-deep)}
+.keys{font-size:11.5px}
+.keys th{text-align:left;font-weight:500;color:var(--faint);font-size:10.5px;
+  padding:0 0 6px;letter-spacing:.02em}
+.keys th:last-child,.keys td:last-child{text-align:right}
+.keys td{padding:5px 0;border-top:1px solid var(--line-soft);color:var(--ink-2)}
+.keys td:first-child{font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+.keys .mdl{color:var(--ink);font-weight:500}
+.lat-big{font-family:var(--font-display);font-size:26px;color:var(--ink);line-height:1}
+.lat-note{font-size:11px;color:var(--faint);margin-top:4px}
+
+@media (max-width:980px){
+  .hero{padding:52px 0 64px}
+  .hero-grid{grid-template-columns:1fr;gap:40px}
+}
+@media (max-width:560px){
+  .hero h1{font-size:clamp(2rem,9.5vw,2.75rem);line-height:1.08}
+  /* 窄屏顶部只保留主 CTA + 菜单按钮；「控制台登录」下沉到移动端导航，
+     否则 .head-in 会横向溢出（实测 390px 溢出 42px） */
+  .head-in{gap:12px}
+  .head-cta{gap:8px}
+  .head-cta .btn-ghost{display:none}
+  .hero-proof{display:grid;grid-template-columns:1fr 1fr;gap:20px 18px}
+  .hero-proof dd{font-size:20px}
+  .surface-split{grid-template-columns:1fr}
+  .surface-split > div:first-child{padding-right:0}
+  .surface-split > div:last-child{padding-left:0;border-left:0;margin-top:14px;
+    padding-top:14px;border-top:1px solid var(--line-soft)}
+}
+
+/* ==========================================================================
+   信任：排版 wordmark，不用灰色占位方块
+   ========================================================================== */
+.trust{padding:56px 0 60px;border-top:1px solid var(--line-soft);
+  border-bottom:1px solid var(--line-soft);background:var(--surface)}
+.trust-label{font-size:12.5px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--faint);font-weight:600;margin-bottom:22px}
+.wordmarks{display:flex;flex-wrap:wrap;align-items:center;gap:14px 44px}
+.wordmarks li{
+  font-family:var(--font-display);font-size:23px;color:var(--ink);
+  opacity:.5;letter-spacing:-.01em;
+  transition:opacity var(--t-base) var(--ease);
+}
+.wordmarks li:hover{opacity:.95}
+.wordmarks li span{font-family:var(--font-ui);font-size:13px;color:var(--muted);
+  margin-left:5px;letter-spacing:0}
+.trust-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:32px;margin-top:38px;
+  padding-top:32px;border-top:1px solid var(--line-soft)}
+.trust-stats b{display:block;font-family:var(--font-display);font-weight:600;font-size:32px;
+  color:var(--ink);line-height:1;letter-spacing:-.02em}
+.trust-stats span{display:block;font-size:13px;color:var(--muted);margin-top:7px}
+@media (max-width:860px){.trust-stats{grid-template-columns:repeat(2,1fr);gap:24px}}
+@media (max-width:560px){.wordmarks{gap:12px 26px}.wordmarks li{font-size:19px}}
+
+/* ==========================================================================
+   BENTO 特性网格
+   ========================================================================== */
+.bento-sec{padding:96px 0}
+.sec-head{max-width:66ch;margin-bottom:44px}
+.sec-head h2{font-size:clamp(1.9rem,3.4vw,2.9rem);line-height:1.08;letter-spacing:-.02em;
+  margin:14px 0 16px}
+.bento{display:grid;grid-template-columns:repeat(12,1fr);
+  grid-auto-rows:minmax(152px,auto);gap:14px}
+.cell{
+  background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r-lg);
+  padding:22px;display:flex;flex-direction:column;min-width:0;
+  transition:border-color var(--t-base) var(--ease),transform var(--t-base) var(--ease),
+             box-shadow var(--t-base) var(--ease);
+}
+.cell:hover{border-color:var(--line);transform:translateY(-2px);box-shadow:var(--shadow-1)}
+.cell h3{font-size:17px;margin-bottom:8px;letter-spacing:-.01em}
+.cell p{font-size:14.5px;color:var(--muted);line-height:1.6}
+.cell-k{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--faint);margin-bottom:14px}
+
+.b-route{grid-column:1/8;grid-row:1/3}
+.b-models{grid-column:8/13;grid-row:1/2}
+.b-code{grid-column:8/13;grid-row:2/3;padding:0;overflow:hidden}
+.b-cost{grid-column:1/6;grid-row:3/5}
+.b-quote{grid-column:6/10;grid-row:3/4}
+.b-alert{grid-column:10/13;grid-row:3/4}
+.b-safe{grid-column:6/13;grid-row:4/5}
+
+.route-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px;
+  padding-top:14px;border-top:1px solid var(--line-soft)}
+.route-stats b{display:block;font-family:var(--font-display);font-size:20px;color:var(--ink);
+  font-weight:600;line-height:1;letter-spacing:-.01em}
+.route-stats span{display:block;font-size:12.5px;color:var(--faint);margin-top:5px}
+@media (max-width:620px){.route-stats{grid-template-columns:1fr 1fr}}
+
+.model-list{margin-top:auto;display:flex;flex-wrap:wrap;gap:6px}
+.chip{
+  font-family:var(--font-mono);font-size:11.5px;color:var(--ink-2);
+  background:var(--surface-2);border:1px solid var(--line-soft);
+  padding:3px 8px;border-radius:6px;
+}
+.chip.hot{background:var(--accent-soft);border-color:rgba(226,154,46,.35);color:var(--accent-deep)}
+
+.code-head{display:flex;align-items:center;gap:8px;padding:10px 14px;
+  background:var(--dark-2);border-bottom:1px solid var(--dark-line-soft)}
+.code-head span{font-size:11.5px;color:var(--dark-muted);font-family:var(--font-mono)}
+.code-head .ic{color:var(--accent-on-dark);margin-right:2px}
+.code-body{background:var(--dark);padding:14px;overflow:auto;flex:1}
+.code-body pre{font-family:var(--font-mono);font-size:12.5px;line-height:1.75;
+  color:#D8D2C6;white-space:pre}
+.tk-key{color:#E8B872}
+.tk-str{color:#8FBF8A}
+.tk-com{color:#6E6A60}
+.tk-fn{color:#9FB8D8}
+
+.quote-cell{justify-content:space-between}
+.quote-cell blockquote{font-family:var(--font-display);font-size:19px;line-height:1.42;
+  color:var(--ink);letter-spacing:-.005em}
+.quote-cell figcaption{display:flex;align-items:center;gap:10px;margin-top:16px;
+  font-size:13px;color:var(--muted)}
+.ava{width:30px;height:30px;border-radius:50%;background:var(--surface-3);flex:none;
+  display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--ink-2)}
+
+.alert-cell{background:var(--ink);border-color:transparent;justify-content:space-between}
+.alert-cell .cell-k{color:rgba(255,255,255,.42)}
+.alert-cell b{font-family:var(--font-display);font-size:38px;line-height:1;color:#FBF9F4;
+  letter-spacing:-.02em}
+.alert-cell b em{font-style:normal;font-size:15px;font-family:var(--font-ui);
+  color:var(--accent-on-dark);margin-left:3px}
+.alert-cell p{color:rgba(255,255,255,.55);font-size:13px;margin-top:8px}
+.alert-cell:hover{border-color:transparent}
+.bar-track{height:5px;border-radius:99px;background:rgba(255,255,255,.13);
+  margin-top:16px;overflow:hidden}
+.bar-fill{height:100%;width:41%;border-radius:99px;background:var(--accent)}
+
+.safe-list{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:auto}
+.safe-list li{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;color:var(--ink-2)}
+.safe-list .ic{color:var(--accent-deep);margin-top:2px}
+.safe-list small{display:block;color:var(--faint);font-size:12px}
+
+@media (max-width:1040px){
+  .bento{grid-template-columns:repeat(6,1fr);grid-auto-rows:minmax(146px,auto)}
+  .b-route{grid-column:1/7;grid-row:auto}
+  .b-models{grid-column:1/7}
+  .b-code{grid-column:1/7;min-height:210px}
+  .b-cost{grid-column:1/7;grid-row:auto}
+  .b-quote{grid-column:1/4}
+  .b-alert{grid-column:4/7}
+  .b-safe{grid-column:1/7}
+  .safe-list{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:620px){
+  .bento-sec{padding:64px 0}
+  .bento{grid-template-columns:1fr}
+  .b-route,.b-models,.b-code,.b-cost,.b-quote,.b-alert,.b-safe{grid-column:1/-1;grid-row:auto}
+  .safe-list{grid-template-columns:1fr}
+}
+
+/* ==========================================================================
+   深色面：可用性与区域
+   ========================================================================== */
+.dark{background:var(--dark);color:var(--dark-muted);padding:88px 0}
+.dark h2{color:var(--dark-ink);font-size:clamp(1.9rem,3.2vw,2.7rem);line-height:1.08;
+  letter-spacing:-.02em;margin:14px 0 16px}
+.dark .eyebrow{color:var(--accent-on-dark)}
+.dark .lede{color:var(--dark-muted);max-width:52ch}
+.dark-grid{display:grid;grid-template-columns:1fr 1.15fr;gap:56px;align-items:center}
+.dark-list{margin-top:30px;display:grid;gap:1px;background:var(--dark-line-soft);
+  border:1px solid var(--dark-line-soft);border-radius:var(--r);overflow:hidden}
+.dark-list li{background:var(--dark);padding:14px 16px;display:flex;align-items:center;gap:12px;
+  font-size:14px}
+.dark-list .ic{color:var(--accent-on-dark)}
+.dark-list b{margin-left:auto;color:var(--dark-ink);font-family:var(--font-mono);font-size:13px}
+.dark-card{background:var(--dark-2);border:1px solid var(--dark-line);border-radius:var(--r-lg);
+  padding:24px}
+.dark-card h3{color:var(--dark-ink);font-size:16px;margin-bottom:4px}
+.dark-card .sub{font-size:13px;color:var(--dark-muted)}
+.up-chart{width:100%;height:auto;margin-top:18px}
+.up-chart rect{fill:var(--accent);opacity:.42}
+.up-chart rect.ok{opacity:.85}
+.up-foot{display:flex;justify-content:space-between;font-size:11.5px;color:var(--dark-muted);
+  margin-top:10px}
+.region-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:22px;
+  background:var(--dark-line-soft);border:1px solid var(--dark-line-soft);
+  border-radius:var(--r);overflow:hidden}
+.region-row div{background:var(--dark-2);padding:14px 16px}
+.region-row span{font-size:12.5px;color:var(--dark-muted);display:block}
+.region-row b{font-family:var(--font-display);font-size:23px;color:var(--dark-ink);
+  display:block;margin-top:4px;font-weight:600}
+@media (max-width:1000px){.dark-grid{grid-template-columns:1fr;gap:40px}}
+@media (max-width:640px){
+  .dark{padding:64px 0}
+  .region-row{grid-template-columns:repeat(2,1fr)}
+}
+
+/* ==========================================================================
+   定价
+   ========================================================================== */
+.pricing{padding:96px 0}
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:stretch}
+.tier{
+  background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r-lg);
+  padding:26px;display:flex;flex-direction:column;
+  transition:border-color var(--t-base) var(--ease),transform var(--t-base) var(--ease),
+             box-shadow var(--t-base) var(--ease);
+}
+.tier:hover{transform:translateY(-2px);box-shadow:var(--shadow-1)}
+.tier.rec{border-color:rgba(226,154,46,.5);box-shadow:var(--shadow-2);position:relative}
+.rec-tag{
+  position:absolute;top:-11px;left:26px;background:var(--accent);color:#2A1B04;
+  font-size:11.5px;font-weight:700;letter-spacing:.04em;padding:4px 11px;border-radius:6px;
+}
+.tier h3{font-size:19px;letter-spacing:-.01em}
+.tier .tier-sub{font-size:13.5px;color:var(--faint);margin-top:5px;min-height:40px}
+.price{display:flex;align-items:baseline;gap:6px;margin:14px 0 4px}
+.price b{font-family:var(--font-display);font-size:42px;line-height:1;color:var(--ink);
+  font-weight:600;letter-spacing:-.025em}
+.price span{font-size:13.5px;color:var(--muted)}
+.tier-note{font-size:12.5px;color:var(--faint);padding-bottom:18px;
+  border-bottom:1px solid var(--line-soft);margin-bottom:18px;min-height:52px}
+.tier ul{display:grid;gap:10px;margin-bottom:24px;flex:1}
+.tier li{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;color:var(--ink-2)}
+.tier li .ic{color:var(--accent-deep);margin-top:3px}
+.tier .btn{width:100%}
+
+.cmp-wrap{margin-top:56px;border:1px solid var(--line-soft);border-radius:var(--r-lg);
+  overflow:hidden;background:var(--surface)}
+.cmp-head{padding:20px 24px;border-bottom:1px solid var(--line-soft);
+  display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.cmp-head h3{font-size:18px}
+.cmp-head p{font-size:13.5px;color:var(--faint)}
+.cmp-scroll{overflow-x:auto}
+.cmp{min-width:640px;font-size:14px}
+.cmp th,.cmp td{padding:12px 24px;text-align:left;border-bottom:1px solid var(--line-soft)}
+.cmp thead th{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);
+  font-weight:600;background:var(--surface-2)}
+.cmp thead th:not(:first-child),.cmp td:not(:first-child){text-align:right;
+  font-feature-settings:'kern' 1,'liga' 1,'tnum' 1;font-variant-numeric:tabular-nums}
+.cmp tbody tr:last-child td{border-bottom:0}
+.cmp tbody tr:hover{background:var(--surface-2)}
+.cmp td:first-child{color:var(--ink-2)}
+.cmp .col-rec{background:rgba(226,154,46,.07)}
+.cmp td strong{color:var(--ink);font-weight:600}
+.cmp .yes{color:var(--accent-deep);font-weight:600}
+.cmp .no{color:var(--faint)}
+
+@media (max-width:900px){.tiers{grid-template-columns:1fr;gap:14px}
+  .tier.rec{order:-1}}
+@media (max-width:620px){.pricing{padding:64px 0}.cmp th,.cmp td{padding:11px 16px}}
+
+/* ==========================================================================
+   FAQ
+   ========================================================================== */
+.faq{padding:0 0 96px}
+.faq-grid{display:grid;grid-template-columns:.72fr 1.28fr;gap:56px;align-items:start}
+.faq-grid h2{font-size:clamp(1.8rem,3vw,2.5rem);line-height:1.08;letter-spacing:-.02em;
+  margin:14px 0 16px}
+.faq-list{border-top:1px solid var(--line-soft)}
+.faq-item{border-bottom:1px solid var(--line-soft)}
+.faq-item summary{
+  list-style:none;cursor:pointer;padding:20px 4px;
+  display:flex;align-items:center;gap:16px;
+  font-size:16.5px;font-weight:600;color:var(--ink);
+  transition:color var(--t-fast) var(--ease);
+}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary:hover{color:var(--accent-deep)}
+.faq-item summary .chev{margin-left:auto;color:var(--faint);flex:none;
+  transition:transform var(--t-base) var(--ease),color var(--t-fast) var(--ease)}
+.faq-item[open] summary .chev{transform:rotate(180deg);color:var(--accent-deep)}
+.faq-a{padding:0 4px 22px;font-size:15.5px;color:var(--muted);max-width:70ch;line-height:1.65}
+.faq-a b{color:var(--ink);font-weight:600}
+@media (max-width:900px){.faq-grid{grid-template-columns:1fr;gap:32px}
+  .faq{padding:0 0 64px}}
+
+/* ==========================================================================
+   CTA + 页脚
+   ========================================================================== */
+.cta-sec{padding:0 0 96px}
+.cta-panel{
+  background:var(--ink);border-radius:var(--r-xl);padding:56px;
+  display:grid;grid-template-columns:1.25fr 1fr;gap:48px;align-items:center;
+}
+.cta-panel h2{color:#FBF9F4;font-size:clamp(1.9rem,3.2vw,2.7rem);line-height:1.06;
+  letter-spacing:-.022em}
+.cta-panel p{color:rgba(255,255,255,.6);margin-top:16px;font-size:16px;max-width:46ch}
+.cta-side{display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.cta-side .btn-accent{width:100%;justify-content:space-between}
+.cta-side .btn-ghost{background:transparent;border-color:var(--dark-line);
+  color:var(--dark-ink);width:100%;justify-content:space-between}
+.cta-side .btn-ghost:hover{border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.04)}
+.cta-fine{font-size:12.5px;color:rgba(255,255,255,.42);margin-top:4px}
+
+.site-foot{background:var(--surface);border-top:1px solid var(--line-soft);padding:60px 0 28px}
+.foot-grid{display:grid;grid-template-columns:1.6fr repeat(4,1fr);gap:36px}
+.foot-about p{font-size:14px;color:var(--muted);margin-top:14px;max-width:34ch}
+.foot-col h4{font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);
+  font-family:var(--font-ui);font-weight:600;margin-bottom:14px}
+.foot-col a{display:block;font-size:14px;color:var(--ink-2);padding:5px 0;
+  transition:color var(--t-fast) var(--ease)}
+.foot-col a:hover{color:var(--accent-deep)}
+.foot-bottom{
+  margin-top:44px;padding-top:22px;border-top:1px solid var(--line-soft);
+  display:flex;align-items:center;gap:20px;flex-wrap:wrap;font-size:13px;color:var(--faint);
+}
+.foot-bottom .ic{color:#3F9E5A}
+.foot-bottom nav{margin-left:auto;display:flex;gap:22px;flex-wrap:wrap}
+.foot-bottom nav a:hover{color:var(--ink)}
+@media (max-width:900px){
+  .cta-panel{grid-template-columns:1fr;padding:36px 28px;gap:32px}
+  .foot-grid{grid-template-columns:1fr 1fr;gap:28px}
+  .foot-about{grid-column:1/-1}
+}
+@media (max-width:620px){
+  .cta-sec{padding:0 0 64px}
+  .site-foot{padding:44px 0 24px}
+  .foot-bottom nav{margin-left:0}
+}
+
+/* ==========================================================================
+   滚动揭示：位移 ≤ 10px + 淡入，尊重 reduced-motion
+   ========================================================================== */
+.js .reveal{opacity:0;transform:translateY(10px);
+  transition:opacity 520ms var(--ease),transform 520ms var(--ease);
+  transition-delay:var(--d,0ms)}
+.js .reveal.in{opacity:1;transform:none}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;animation-iteration-count:1!important;
+    transition-duration:.01ms!important;scroll-behavior:auto!important;
+  }
+  .js .reveal{opacity:1!important;transform:none!important}
+  .btn:hover,.cell:hover,.tier:hover{transform:none}
+  .pulse{box-shadow:none}
+}
+html{scroll-behavior:smooth}
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">跳到主要内容</a>
+
+<!-- 图标精灵：统一 1.5 描边，无 emoji -->
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M4.5 12.5l4.5 4.5L19.5 7"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6l7-3z"/><path d="M9.2 12.2l2 2 3.6-3.8"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.6" cy="12" r="3.4"/><path d="M11 12h10M18 12v3.2M15 12v2.2"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 3L5.5 13.5H11L10 21l7.5-10.5H12L13 3z"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 19V5M4 19h16"/><path d="M8.5 16v-4M12.5 16V8M16.5 16v-6"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M4 12h16"/><path d="M12 4c2.6 2.6 2.6 13.4 0 16-2.6-2.6-2.6-13.4 0-16z"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9.5l6 6 6-6"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3.2 1.9"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2.2"/><path d="M8 10.5V8a4 4 0 018 0v2.5"/></symbol>
+  <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.2"/><path d="M7.5 10l2.5 2.5-2.5 2.5M12.5 15h4"/></symbol>
+</svg>
+
+<!-- ===================== 导航 ===================== -->
+<!-- fix: 语义化 landmark + 状态可见 + 移动端真实菜单 -->
+<header class="site-head" data-rule="语义 landmark + 可聚焦导航">
+  <div class="wrap head-in">
+    <a class="brand" href="#main" aria-label="Foyton 首页">
+      <span class="brand-mark" aria-hidden="true"><i></i></span>
+      <em>Foyton</em>
+    </a>
+    <nav class="head-nav" aria-label="主导航">
+      <a href="#features">平台能力</a>
+      <a href="#models">模型目录</a>
+      <a href="#pricing">定价</a>
+      <a href="#faq">常见问题</a>
+    </nav>
+    <div class="head-cta">
+      <span class="head-status"><span class="pulse" aria-hidden="true"></span>全部区域正常 · 99.98%</span>
+      <a class="btn btn-ghost btn-sm" href="#pricing">控制台登录</a>
+      <a class="btn btn-primary btn-sm" href="#cta">创建 API 密钥</a>
+      <button class="burger" type="button" id="burger" aria-label="展开导航菜单"
+              aria-expanded="false" aria-controls="mobileNav">
+        <svg class="ic ic-lg" aria-hidden="true"><use href="#i-menu"/></svg>
+      </button>
+    </div>
+  </div>
+  <nav class="mobile-nav" id="mobileNav" aria-label="移动端导航">
+    <a href="#features">平台能力</a>
+    <a href="#models">模型目录</a>
+    <a href="#pricing">定价</a>
+    <a href="#faq">常见问题</a>
+    <a href="#pricing">控制台登录</a>
+    <a href="#cta">创建 API 密钥</a>
+  </nav>
+</header>
+
+<main id="main">
+
+<!-- ===================== HERO ===================== -->
+<!-- fix: hero 标题在 1440px 下 ≤2 行；正文 ≤62ch；右侧真实产品面 -->
+<section class="hero" data-rule="hero 标题 ≤2 行 @1440px，非对称栅格">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <span class="eyebrow reveal"><span class="dot" aria-hidden="true"></span>v4.2 · 已接入 47 个模型</span>
+      <h1 class="reveal" style="--d:40ms">统一接入前沿模型<br>用量账目清清楚楚</h1>
+      <p class="lede reveal" style="--d:80ms">
+        Foyton 把 11 家厂商的 47 个模型收敛成一个 OpenAI 兼容接口。
+        改一行 <code>base_url</code> 就能跑通，密钥可热轮换不停机，
+        每一次调用的 Token 数与费用都精确记录到毫秒级的请求日志里。
+      </p>
+      <div class="hero-actions reveal" style="--d:120ms">
+        <a class="btn btn-accent" href="#cta">
+          创建免费密钥
+          <svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg>
+        </a>
+        <a class="btn btn-ghost" href="#models">查看 47 个模型与单价</a>
+      </div>
+      <dl class="hero-proof reveal" style="--d:160ms">
+        <div><dt>30 天滚动可用性</dt><dd class="tnum">99.98%</dd></div>
+        <div><dt>全球 P95 延迟</dt><dd class="tnum">812ms</dd></div>
+        <div><dt>本月处理调用</dt><dd class="tnum">1,240 万</dd></div>
+        <div><dt>起售价</dt><dd class="tnum">¥0.008<span style="font-size:13px;font-family:var(--font-ui);color:var(--muted)">/千 Token</span></dd></div>
+      </dl>
+    </div>
+
+    <!-- 产品界面：纯 SVG + CSS 手绘，非位图 -->
+    <div class="surface reveal" style="--d:200ms" role="img"
+         aria-label="Foyton 控制台用量总览界面示意：本月调用 1,240 万次、成功率 99.97%、P95 延迟 812 毫秒，含近 12 个月调用量面积图、密钥用量表与延迟迷你趋势线">
+      <div class="surface-bar">
+        <span class="d"></span><span class="d"></span><span class="d"></span>
+        <span class="surface-title">控制台 · 用量总览</span>
+        <span class="surface-live"><i></i>实时</span>
+      </div>
+      <div class="surface-body">
+        <div class="kpis">
+          <div class="kpi">
+            <span class="kpi-k">本月调用</span>
+            <span class="kpi-v tnum">1,240<span class="u">万次</span></span>
+            <span class="kpi-d up tnum">环比 +18.4%</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-k">请求成功率</span>
+            <span class="kpi-v tnum">99.97<span class="u">%</span></span>
+            <span class="kpi-d up tnum">失败 3,712 次</span>
+          </div>
+          <div class="kpi">
+            <span class="kpi-k">P95 延迟</span>
+            <span class="kpi-v tnum">812<span class="u">ms</span></span>
+            <span class="kpi-d down tnum">较上月 −96ms</span>
+          </div>
+        </div>
+
+        <figure class="chart">
+          <figcaption class="chart-head">
+            <span>近 12 个月调用量</span>
+            <span class="legend"><i aria-hidden="true"></i>万次 / 月</span>
+          </figcaption>
+          <svg viewBox="0 0 560 170" preserveAspectRatio="none" aria-hidden="true" style="height:96px">
+            <defs>
+              <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#E29A2E" stop-opacity=".22"/>
+                <stop offset="1" stop-color="#E29A2E" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <line x1="0" y1="42" x2="560" y2="42" stroke="rgba(23,21,15,.06)" stroke-width="1"/>
+            <line x1="0" y1="85" x2="560" y2="85" stroke="rgba(23,21,15,.06)" stroke-width="1"/>
+            <line x1="0" y1="128" x2="560" y2="128" stroke="rgba(23,21,15,.06)" stroke-width="1"/>
+            <path fill="url(#area)" d="M0.0,158.0 C11.2,151.2 28.5,130.7 50.9,126.9 C73.3,123.0 79.4,146.5 101.8,140.5 C124.2,134.5 130.3,106.5 152.7,99.6 C175.1,92.8 181.2,115.3 203.6,109.4 C226.0,103.4 232.1,77.5 254.5,72.4 C276.9,67.2 283.1,91.1 305.5,86.0 C327.9,80.9 334.0,54.2 356.4,49.0 C378.8,43.9 384.9,66.9 407.3,62.6 C429.7,58.4 435.8,33.8 458.2,29.6 C480.6,25.3 486.7,46.6 509.1,43.2 C531.5,39.8 548.8,20.4 560.0,14.0 L560.0,170.0 L0.0,170.0 Z"/>
+            <path fill="none" stroke="#B9720F" stroke-width="2" stroke-linecap="round"
+                  d="M0.0,158.0 C11.2,151.2 28.5,130.7 50.9,126.9 C73.3,123.0 79.4,146.5 101.8,140.5 C124.2,134.5 130.3,106.5 152.7,99.6 C175.1,92.8 181.2,115.3 203.6,109.4 C226.0,103.4 232.1,77.5 254.5,72.4 C276.9,67.2 283.1,91.1 305.5,86.0 C327.9,80.9 334.0,54.2 356.4,49.0 C378.8,43.9 384.9,66.9 407.3,62.6 C429.7,58.4 435.8,33.8 458.2,29.6 C480.6,25.3 486.7,46.6 509.1,43.2 C531.5,39.8 548.8,20.4 560.0,14.0"/>
+            <circle cx="560" cy="14" r="3.5" fill="#B9720F"/>
+            <circle cx="560" cy="14" r="7" fill="#E29A2E" opacity=".22"/>
+          </svg>
+          <div class="axis tnum"><span>2024-11</span><span>2025-04</span><span>2025-10</span></div>
+        </figure>
+
+        <div class="surface-split">
+          <div>
+            <div class="mini-h"><span>密钥用量 · 本月</span><span class="tnum">3 个活跃</span></div>
+            <table class="keys">
+              <thead><tr><th>Key</th><th>默认模型</th><th>用量</th></tr></thead>
+              <tbody>
+                <tr><td>fk_live_8a…c21</td><td class="mdl">deepseek-v3</td><td class="tnum">612 万</td></tr>
+                <tr><td>fk_live_3d…9f4</td><td class="mdl">qwen3-max</td><td class="tnum">401 万</td></tr>
+                <tr><td>fk_test_7b…a08</td><td class="mdl">gpt-4o</td><td class="tnum">227 万</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <div class="mini-h"><span>P95 延迟 · 24h</span><b class="tnum">660ms</b></div>
+            <svg viewBox="0 0 168 40" preserveAspectRatio="none" aria-hidden="true" style="width:100%;height:40px">
+              <path fill="none" stroke="#3B372C" stroke-width="1.6" stroke-linecap="round"
+                    d="M0.0,9.5 C1.6,8.5 4.1,4.4 7.3,5.0 C10.5,5.6 11.4,10.4 14.6,12.3 C17.8,14.2 18.7,14.7 21.9,13.4 C25.1,12.2 26.0,7.3 29.2,6.6 C32.4,6.0 33.3,8.4 36.5,10.5 C39.7,12.6 40.6,14.4 43.8,16.0 C47.0,17.6 47.9,18.5 51.1,17.8 C54.3,17.2 55.2,12.6 58.4,13.1 C61.6,13.6 62.5,18.0 65.7,19.9 C69.0,21.9 69.8,22.4 73.0,22.0 C76.3,21.7 77.1,17.8 80.3,18.3 C83.6,18.8 84.4,23.9 87.7,24.5 C90.9,25.0 91.7,20.7 95.0,20.9 C98.2,21.1 99.0,23.9 102.3,25.3 C105.5,26.7 106.4,27.7 109.6,27.2 C112.8,26.8 113.7,22.8 116.9,23.2 C120.1,23.5 121.0,27.0 124.2,28.7 C127.4,30.4 128.3,30.6 131.5,30.8 C134.7,30.9 135.6,29.0 138.8,29.3 C142.0,29.6 142.9,31.5 146.1,32.2 C149.3,33.0 150.2,32.3 153.4,32.9 C156.6,33.5 157.5,34.7 160.7,35.0 C163.9,35.3 166.4,34.4 168.0,34.2"/>
+            </svg>
+            <p class="lat-note tnum">−18.7% 相对 7 天前</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 信任 ===================== -->
+<!-- fix: 用排版 wordmark 替代 5 个灰色占位方块；数字给区间与口径 -->
+<section class="trust" data-rule="信任区用排版 wordmark，不给假 logo 方块">
+  <div class="wrap">
+    <p class="trust-label reveal">已经跑在生产环境里的团队</p>
+    <ul class="wordmarks reveal" style="--d:40ms">
+      <li>星轨智能 <span>推荐系统</span></li>
+      <li>MOONSET</li>
+      <li>知微数据 <span>RAG</span></li>
+      <li>Substrate</li>
+      <li>禾木医疗 <span>病历结构化</span></li>
+      <li>北纬三十度</li>
+      <li>Kite Labs</li>
+    </ul>
+    <div class="trust-stats reveal" style="--d:80ms">
+      <div><b class="tnum">31,400</b><span>付费开发者账号</span></div>
+      <div><b class="tnum">47</b><span>在架模型，来自 11 家厂商</span></div>
+      <div><b class="tnum">99.98%</b><span>30 天滚动可用性（2025-09）</span></div>
+      <div><b class="tnum">4 小时</b><span>专业版工单首次响应上限</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== BENTO 能力 ===================== -->
+<!-- fix: 三张等高等权卡片 → 变跨度 bento，单元格类型各异 -->
+<section class="bento-sec wrap" id="features" data-rule="特性区改为变跨度 bento，填充不留空洞">
+  <div class="sec-head">
+    <span class="eyebrow reveal"><span class="dot" aria-hidden="true"></span>平台能力</span>
+    <h2 class="reveal" style="--d:40ms">不是多一层代理，<br>是把混乱收敛成一张账单</h2>
+    <p class="lede reveal" style="--d:80ms">
+      自建网关要处理鉴权、限流、重试、失败转移、对账五件事。Foyton 把这五件事做成了默认能力，
+      你只需要一个 base_url 和一个密钥。
+    </p>
+  </div>
+
+  <div class="bento">
+
+    <!-- 智能路由图 -->
+    <article class="cell b-route reveal">
+      <p class="cell-k">请求路径</p>
+      <h3>一次请求，自动落到最合适的模型</h3>
+      <p>按可用性、延迟、单价三个维度打分路由。主链路 5xx 时在 180ms 内切到备用模型，业务无感。</p>
+      <svg viewBox="0 0 560 280" style="width:100%;height:auto;margin-top:18px;flex:1"
+           role="img" aria-label="路由示意图：你的服务经 Foyton 网关做鉴权、限流、重试与路由，分发到 deepseek-v3、qwen3-max、claude-sonnet-4.5、gpt-4o 四个模型节点">
+        <rect x="6" y="44" width="104" height="34" rx="8" fill="#FFFFFF" stroke="rgba(23,21,15,.10)"/>
+        <text x="58" y="65" text-anchor="middle" font-family="-apple-system,system-ui,sans-serif" font-size="11.5" fill="#6E6656">峰值 13,400 QPS</text>
+        <path d="M58 78v30" stroke="rgba(23,21,15,.16)" stroke-width="1.4" stroke-dasharray="3 3"/>
+        <path d="M53 101l5 6 5-6" fill="none" stroke="rgba(23,21,15,.16)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+
+        <rect x="6" y="118" width="104" height="64" rx="10" fill="#F4F0E8" stroke="rgba(23,21,15,.10)"/>
+        <text x="58" y="146" text-anchor="middle" font-family="-apple-system,system-ui,sans-serif" font-size="14" fill="#17150F">你的服务</text>
+        <text x="58" y="165" text-anchor="middle" font-family="-apple-system,system-ui,sans-serif" font-size="11" fill="#9A9182">Node / Go / Python</text>
+
+        <text x="58" y="212" text-anchor="middle" font-family="-apple-system,system-ui,sans-serif" font-size="10.5" fill="#9A9182">重试 3 次</text>
+        <text x="58" y="228" text-anchor="middle" font-family="-apple-system,system-ui,sans-serif" font-size="10.5" fill="#9A9182">熔断 5xx · 不重放</text>
+
+        <path d="M118 150h26" stroke="rgba(23,21,15,.18)" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M144 145l6 5-6 5" fill="none" stroke="rgba(23,21,15,.18)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+        <rect x="152" y="104" width="140" height="92" rx="12" fill="#FFFFFF" stroke="rgba(226,154,46,.55)"/>
+        <text x="222" y="140" text-anchor="middle" font-family="-apple-system,system-ui,sans-serif" font-size="14.5" font-weight="600" fill="#17150F">Foyton 网关</text>
+        <text x="222" y="160" text-anchor="middle" font-family="-apple-system,system-ui,sans-serif" font-size="11" fill="#6E6656">鉴权 · 限流 · 重试</text>
+        <text x="222" y="177" text-anchor="middle" font-family="-apple-system,system-ui,sans-serif" font-size="11" fill="#6E6656">路由 · 计量</text>
+
+        <path d="M292 150 C330 150 336 52 372 52" fill="none" stroke="#E29A2E" stroke-width="1.6"/>
+        <path d="M292 150 C330 150 336 116 372 116" fill="none" stroke="rgba(23,21,15,.16)" stroke-width="1.4"/>
+        <path d="M292 150 C330 150 336 180 372 180" fill="none" stroke="rgba(23,21,15,.16)" stroke-width="1.4"/>
+        <path d="M292 150 C330 150 336 244 372 244" fill="none" stroke="#E29A2E" stroke-width="1.6"/>
+
+        <g font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12.5">
+          <rect x="372" y="26" width="182" height="52" rx="10" fill="#FFFFFF" stroke="rgba(226,154,46,.5)"/>
+          <circle cx="390" cy="52" r="3.5" fill="#E29A2E"/>
+          <text x="404" y="48" fill="#17150F">deepseek-v3</text>
+          <text x="404" y="65" fill="#9A9182" font-size="11">410ms · ¥0.008/k</text>
+
+          <rect x="372" y="90" width="182" height="52" rx="10" fill="#FFFFFF" stroke="rgba(23,21,15,.10)"/>
+          <circle cx="390" cy="116" r="3.5" fill="#3F9E5A"/>
+          <text x="404" y="112" fill="#17150F">qwen3-max</text>
+          <text x="404" y="129" fill="#9A9182" font-size="11">380ms · ¥0.011/k</text>
+
+          <rect x="372" y="154" width="182" height="52" rx="10" fill="#FFFFFF" stroke="rgba(23,21,15,.10)"/>
+          <circle cx="390" cy="180" r="3.5" fill="#3F9E5A"/>
+          <text x="404" y="176" fill="#17150F">claude-sonnet-4.5</text>
+          <text x="404" y="193" fill="#9A9182" font-size="11">820ms · ¥0.021/k</text>
+
+          <rect x="372" y="218" width="182" height="52" rx="10" fill="#FFFFFF" stroke="rgba(226,154,46,.5)"/>
+          <circle cx="390" cy="244" r="3.5" fill="#E29A2E"/>
+          <text x="404" y="240" fill="#17150F">gpt-4o</text>
+          <text x="404" y="257" fill="#9A9182" font-size="11">640ms · ¥0.036/k</text>
+        </g>
+      </svg>
+      <ul class="route-stats">
+        <li><b class="tnum">11ms</b><span>网关额外延迟 P50</span></li>
+        <li><b class="tnum">180ms</b><span>主链路失败后切换</span></li>
+        <li><b class="tnum">62%</b><span>流量已路由至国产模型</span></li>
+      </ul>
+    </article>
+
+    <!-- 模型目录 -->
+    <article class="cell b-models reveal" id="models" style="--d:60ms">
+      <p class="cell-k">模型目录</p>
+      <h3>47 个在架模型，价格公开</h3>
+      <p>每一款的输入 / 输出单价、上下文长度、并发上限都在目录页里，没有「联系销售」这一栏。</p>
+      <div class="model-list">
+        <span class="chip hot">deepseek-v3</span>
+        <span class="chip hot">qwen3-max</span>
+        <span class="chip">glm-4.6</span>
+        <span class="chip">kimi-k2</span>
+        <span class="chip">minimax-m2</span>
+        <span class="chip">claude-sonnet-4.5</span>
+        <span class="chip">gpt-4o</span>
+        <span class="chip">gemini-2.5-pro</span>
+        <span class="chip">+ 39</span>
+      </div>
+    </article>
+
+    <!-- 代码块 -->
+    <article class="cell b-code reveal" style="--d:100ms">
+      <div class="code-head">
+        <svg class="ic" aria-hidden="true"><use href="#i-terminal"/></svg>
+        <span>迁移成本：一行</span>
+      </div>
+      <div class="code-body">
+<pre><span class="tk-com"># 原来指向任何一家厂商</span>
+<span class="tk-key">client</span> = OpenAI(
+    <span class="tk-fn">base_url</span>=<span class="tk-str">"https://api.foyton.dev/v1"</span>,
+    <span class="tk-fn">api_key</span>=<span class="tk-str">"fk_live_8a…c21"</span>,
+)
+<span class="tk-com"># 其余 SDK 代码无需改动</span></pre>
+      </div>
+    </article>
+
+    <!-- 成本对比图 -->
+    <article class="cell b-cost reveal" style="--d:60ms">
+      <p class="cell-k">成本</p>
+      <h3>同样的 Prompt，账单平均低 41%</h3>
+      <p>按 2025-09 的真实调用分布统计：在保持输出质量评估分不变的前提下，把 62% 的流量迁到国产模型后的月度成本对比。</p>
+      <svg viewBox="0 0 360 150" style="width:100%;height:auto;margin-top:auto;padding-top:22px"
+           role="img" aria-label="柱状图：GPT-4o、Claude、Gemini、DeepSeek、Qwen3 五款模型在官方直连与经 Foyton 路由两种方式下的相对成本，后三款经 Foyton 后显著下降">
+        <g fill="#EBE5DA">
+          <rect x="14" y="46" width="20" height="92" rx="3"/>
+          <rect x="86" y="46" width="20" height="92" rx="3"/>
+          <rect x="158" y="46" width="20" height="92" rx="3"/>
+          <rect x="230" y="46" width="20" height="92" rx="3"/>
+          <rect x="302" y="46" width="20" height="92" rx="3"/>
+        </g>
+        <g fill="#E29A2E">
+          <rect x="38" y="46" width="20" height="92" rx="3"/>
+          <rect x="110" y="53.4" width="20" height="84.6" rx="3"/>
+          <rect x="182" y="57" width="20" height="81" rx="3"/>
+          <rect x="254" y="106.7" width="20" height="31.3" rx="3"/>
+          <rect x="326" y="100.3" width="20" height="37.7" rx="3"/>
+        </g>
+        <line x1="8" y1="138.5" x2="352" y2="138.5" stroke="rgba(23,21,15,.14)"/>
+        <g font-family="-apple-system,system-ui,sans-serif" font-size="10.5" fill="#9A9182" text-anchor="middle">
+          <text x="36" y="150">GPT-4o</text>
+          <text x="108" y="150">Claude</text>
+          <text x="180" y="150">Gemini</text>
+          <text x="252" y="150">DeepSeek</text>
+          <text x="324" y="150">Qwen3</text>
+        </g>
+      </svg>
+      <div class="legend" style="margin-top:14px;gap:16px">
+        <span class="legend" style="gap:6px"><i style="background:#EBE5DA" aria-hidden="true"></i>官方直连</span>
+        <span class="legend" style="gap:6px"><i aria-hidden="true"></i>经 Foyton</span>
+      </div>
+    </article>
+
+    <!-- 客户引言 -->
+    <figure class="cell b-quote quote-cell reveal" style="--d:100ms">
+      <blockquote>“我们把 9 个厂商的密钥收成 1 个，季度对账从 3 天压到 40 分钟。”</blockquote>
+      <figcaption>
+        <span class="ava" aria-hidden="true">周</span>
+        <span>周叙 · 星轨智能 平台工程负责人</span>
+      </figcaption>
+    </figure>
+
+    <!-- 深色数据格 -->
+    <article class="cell b-alert alert-cell reveal" style="--d:140ms">
+      <p class="cell-k">可观测</p>
+      <b class="tnum">41<em>%</em></b>
+      <p>接入后平均月度成本下降</p>
+      <div class="bar-track" aria-hidden="true"><div class="bar-fill"></div></div>
+    </article>
+
+    <!-- 安全合规 -->
+    <article class="cell b-safe reveal" style="--d:60ms">
+      <p class="cell-k">安全与合规</p>
+      <h3 style="margin-bottom:16px">密钥和数据都归你管</h3>
+      <ul class="safe-list">
+        <li><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg>
+          <span>密钥热轮换<small>双密钥并行，0 次请求失败</small></span></li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg>
+          <span>默认不留存 Prompt<small>可按密钥开启 30 天留存</small></span></li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg>
+          <span>审计日志 180 天<small>导出为 CSV / Parquet</small></span></li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>
+          <span>SOC 2 Type II<small>2025-06 完成年度审计</small></span></li>
+      </ul>
+    </article>
+
+  </div>
+</section>
+
+<!-- ===================== 深色面：可用性 ===================== -->
+<!-- fix: 节奏变化——全幅深色面，与浅色区形成对比 -->
+<section class="dark" data-rule="分区节奏：全幅深色面对比">
+  <div class="wrap dark-grid">
+    <div>
+      <span class="eyebrow reveal"><span class="dot" aria-hidden="true"></span>可用性</span>
+      <h2 class="reveal" style="--d:40ms">过去 30 天，<br>没有一次超过 90 秒的故障</h2>
+      <p class="lede reveal" style="--d:80ms">
+        2025-09 共发生 2 次降级，累计影响 4 分 12 秒，均按 SLA 自动赔付。
+        四个区域独立部署，任一区域故障时 DNS 在 60 秒内完成切换。
+      </p>
+      <ul class="dark-list reveal" style="--d:120ms">
+        <li><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg>上海 · cn-east-1 <b class="tnum">388ms</b></li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg>新加坡 · ap-southeast-1 <b class="tnum">412ms</b></li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg>法兰克福 · eu-central-1 <b class="tnum">704ms</b></li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg>弗吉尼亚 · us-east-1 <b class="tnum">661ms</b></li>
+      </ul>
+    </div>
+
+    <div class="dark-card reveal" style="--d:60ms">
+      <h3>每日可用性 · 2025-09-01 至 09-30</h3>
+      <p class="sub">SLA 下限 99.90%，实际最低 99.92%（09-13）</p>
+      <svg class="up-chart" viewBox="0 0 720 96" role="img"
+           aria-label="30 天每日可用性柱状图，最低 99.92%，其中 12 天为 100%">
+        <rect x="0.0" y="57.0" width="20.6" height="27.0" rx="1.6"/>
+        <rect x="24.0" y="29.5" width="20.6" height="54.5" rx="1.6"/>
+        <rect class="ok" x="48.0" y="24.0" width="20.6" height="60.0" rx="1.6"/>
+        <rect x="72.0" y="40.5" width="20.6" height="43.5" rx="1.6"/>
+        <rect x="96.0" y="29.5" width="20.6" height="54.5" rx="1.6"/>
+        <rect class="ok" x="120.0" y="24.0" width="20.6" height="60.0" rx="1.6"/>
+        <rect class="ok" x="144.0" y="24.0" width="20.6" height="60.0" rx="1.6"/>
+        <rect x="168.0" y="51.5" width="20.6" height="32.5" rx="1.6"/>
+        <rect x="192.0" y="35.0" width="20.6" height="49.0" rx="1.6"/>
+        <rect class="ok" x="216.0" y="24.0" width="20.6" height="60.0" rx="1.6"/>
+        <rect x="240.0" y="29.5" width="20.6" height="54.5" rx="1.6"/>
+        <rect class="ok" x="264.0" y="24.0" width="20.6" height="60.0" rx="1.6"/>
+        <rect x="288.0" y="68.0" width="20.6" height="16.0" rx="1.6"/>
+        <rect x="312.0" y="40.5" width="20.6" height="43.5" rx="1.6"/>
+        <rect class="ok" x="336.0" y="24.0" width="20.6" height="60.0" rx="1.6"/>
+        <rect class="ok" x="360.0" y="24.0" width="20.6" height="60.0" rx="1.6"/>
+        <rect x="384.0" y="35.0" width="20.6" height="49.0" rx="1.6"/>
+        <rect x="408.0" y="29.5" width="20.6" height="54.5" rx="1.6"/>
+        <rect class="ok" x="432.0" y="24.0" width="20.6" height="60.0" rx="1.6"/>
+        <rect x="456.0" y="46.0" width="20.6" height="38.0" rx="1.6"/>
+        <rect class="ok" x="480.0" y="24.0" width="20.6" height="60.0" rx="1.6"/>
+        <rect x="504.0" y="29.5" width="20.6" height="54.5" rx="1.6"/>
+        <rect x="528.0" y="35.0" width="20.6" height="49.0" rx="1.6"/>
+        <rect class="ok" x="552.0" y="24.0" width="20.6" height="60.0" rx="1.6"/>
+        <rect class="ok" x="576.0" y="24.0" width="20.6" height="60.0" rx="1.6"/>
+        <rect x="600.0" y="40.5" width="20.6" height="43.5" rx="1.6"/>
+        <rect x="624.0" y="62.5" width="20.6" height="21.5" rx="1.6"/>
+        <rect x="648.0" y="29.5" width="20.6" height="54.5" rx="1.6"/>
+        <rect class="ok" x="672.0" y="24.0" width="20.6" height="60.0" rx="1.6"/>
+        <rect class="ok" x="696.0" y="24.0" width="20.6" height="60.0" rx="1.6"/>
+        <line x1="0" y1="88" x2="720" y2="88" stroke="rgba(255,255,255,.22)"
+              stroke-width="1" stroke-dasharray="4 4"/>
+      </svg>
+      <div class="up-foot tnum">
+        <span>09-01</span><span>99.90% SLA 下限</span><span>09-30 · 99.99%</span>
+      </div>
+      <div class="region-row">
+        <div><span>平均 P95</span><b class="tnum">812ms</b></div>
+        <div><span>请求成功率</span><b class="tnum">99.97%</b></div>
+        <div><span>峰值 QPS</span><b class="tnum">18,400</b></div>
+        <div><span>赔付到账</span><b class="tnum">T+3</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 定价 ===================== -->
+<!-- fix: 价格表给真实数字、明确推荐档、带等宽数字的对比表 -->
+<section class="pricing wrap" id="pricing" data-rule="定价给真实数字 + 推荐档 + 对比表">
+  <div class="sec-head">
+    <span class="eyebrow reveal"><span class="dot" aria-hidden="true"></span>定价</span>
+    <h2 class="reveal" style="--d:40ms">按月付费，用超了按 ¥0.008 / 千 Token 结算</h2>
+    <p class="lede reveal" style="--d:80ms">
+      没有「联系我们」这一栏。所有档位的额度、限流、SLA 和响应时间都写在下面，
+      年付再减 2 个月，随时可以降级。
+    </p>
+  </div>
+
+  <div class="tiers">
+    <article class="tier reveal">
+      <h3>免费版</h3>
+      <p class="tier-sub">个人项目与原型验证</p>
+      <p class="price"><b class="tnum">¥0</b><span>永久免费</span></p>
+      <p class="tier-note tnum">每月含 100 万 Token 额度，超出后停止调用而不产生费用。</p>
+      <ul>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>11 个基础模型</li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>2 个 API 密钥</li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>60 RPM 并发上限</li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>7 天请求日志</li>
+      </ul>
+      <a class="btn btn-ghost" href="#cta">创建免费密钥</a>
+    </article>
+
+    <article class="tier rec reveal" style="--d:60ms">
+      <span class="rec-tag">推荐</span>
+      <h3>专业版</h3>
+      <p class="tier-sub">小团队的生产环境</p>
+      <p class="price"><b class="tnum">¥299</b><span>/ 月</span></p>
+      <p class="tier-note tnum">含 5,000 万 Token，超出 ¥0.008/千 Token，账单按小时更新。</p>
+      <ul>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>全部 47 个模型</li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>20 个 API 密钥，支持热轮换</li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>3,000 RPM / 60 并发</li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>99.90% SLA，4 小时工单响应</li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>90 天用量与审计日志</li>
+      </ul>
+      <a class="btn btn-accent" href="#cta">开始 14 天试用</a>
+    </article>
+
+    <article class="tier reveal" style="--d:120ms">
+      <h3>企业版</h3>
+      <p class="tier-sub">多团队、强合规场景</p>
+      <p class="price"><b class="tnum">¥1,499</b><span>/ 月</span></p>
+      <p class="tier-note tnum">含 3 亿 Token，超出 ¥0.006/千 Token，支持对公月结。</p>
+      <ul>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>不限密钥与子账号，SSO / SAML</li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>30,000 RPM，专属网关实例</li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>99.98% SLA，15 分钟响应，T+3 赔付</li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>180 天审计日志 + 私有化部署</li>
+      </ul>
+      <a class="btn btn-ghost" href="#cta">预约架构评审</a>
+    </article>
+  </div>
+
+  <div class="cmp-wrap reveal">
+    <div class="cmp-head">
+      <h3>档位对比</h3>
+      <p>数字口径均为单账号月度上限 · 2025-10 生效</p>
+    </div>
+    <div class="cmp-scroll">
+      <table class="cmp">
+        <caption class="sr-only">Foyton 免费版、专业版、企业版功能对比</caption>
+        <thead>
+          <tr>
+            <th scope="col">项目</th>
+            <th scope="col">免费版</th>
+            <th scope="col" class="col-rec">专业版</th>
+            <th scope="col">企业版</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>月度 Token 额度</td><td>100 万</td><td class="col-rec"><strong>5,000 万</strong></td><td>3 亿</td></tr>
+          <tr><td>超出单价（千 Token）</td><td class="no">停止调用</td><td class="col-rec">¥0.008</td><td>¥0.006</td></tr>
+          <tr><td>可用模型数</td><td>11</td><td class="col-rec"><strong>47</strong></td><td>47 + 私有模型</td></tr>
+          <tr><td>API 密钥数</td><td>2</td><td class="col-rec">20</td><td>不限</td></tr>
+          <tr><td>并发上限（RPM）</td><td>60</td><td class="col-rec">3,000</td><td>30,000</td></tr>
+          <tr><td>SLA</td><td class="no">无</td><td class="col-rec">99.90%</td><td>99.98%</td></tr>
+          <tr><td>工单首次响应</td><td class="no">社区</td><td class="col-rec">4 小时</td><td>15 分钟</td></tr>
+          <tr><td>用量日志留存</td><td>7 天</td><td class="col-rec">90 天</td><td>180 天</td></tr>
+          <tr><td>故障赔付</td><td class="no">—</td><td class="col-rec">按 SLA 折算</td><td>按 SLA 折算，T+3 到账</td></tr>
+          <tr><td>SSO / SAML</td><td class="no">—</td><td class="col-rec no">—</td><td class="yes">支持</td></tr>
+          <tr><td>私有化部署</td><td class="no">—</td><td class="col-rec no">—</td><td class="yes">支持</td></tr>
+          <tr><td>专属技术支持</td><td class="no">—</td><td class="col-rec no">—</td><td class="yes">架构师 1v1</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FAQ ===================== -->
+<!-- fix: 用原生 details/summary，键盘可用，答案具体可核 -->
+<section class="faq wrap" id="faq" data-rule="FAQ 使用原生 details，可键盘操作">
+  <div class="faq-grid">
+    <div>
+      <span class="eyebrow reveal"><span class="dot" aria-hidden="true"></span>常见问题</span>
+      <h2 class="reveal" style="--d:40ms">接入前你大概会问的六件事</h2>
+      <p class="lede reveal" style="--d:80ms">
+        还有别的问题，可以发邮件到 <a href="mailto:support@foyton.dev" style="color:var(--accent-deep);text-decoration:underline">support@foyton.dev</a>，
+        工作时间内平均 2 小时回复。
+      </p>
+    </div>
+
+    <div class="faq-list reveal" style="--d:60ms">
+      <details class="faq-item" open>
+        <summary>Foyton 和直接用厂商官方 API 有什么区别？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+        <div class="faq-a">三个差别：一是接口统一，47 个模型共用一套 OpenAI 兼容协议，换模型只改 <b>model</b> 字段；二是路由与容灾，主链路失败时 180ms 内切换备用模型；三是对账，所有模型的用量会按密钥、项目、模型三个维度汇总成同一份账单，不用再去 11 个后台导表。</div>
+      </details>
+      <details class="faq-item">
+        <summary>延迟会不会比直连更高？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+        <div class="faq-a">网关本身的开销是 <b>11ms</b>（P50，含鉴权与计量）。真正的差异来自路由：当某个模型区域节点排队时，路由会把请求打到更空闲的区域，实测 P95 反而比固定直连低 96ms。2025-09 全球加权 P95 为 812ms。</div>
+      </details>
+      <details class="faq-item">
+        <summary>我的 Prompt 数据会被留存或用于训练吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+        <div class="faq-a">默认<b>不留存请求与响应正文</b>，只记录 Token 数、模型、耗时、状态码这些计费与排障必需字段。如果需要排查问题，可以在单个密钥上手动开启 30 天正文留存，随时关闭，关闭后 24 小时内清除已存内容。任何数据都不会用于训练。</div>
+      </details>
+      <details class="faq-item">
+        <summary>用量超出套餐额度会怎样？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+        <div class="faq-a">专业版和企业版按超出单价继续计费，账单每小时刷新一次；你可以在控制台设置月度硬上限，达到上限后自动停服并发送告警。免费版没有绑定支付方式，额度用尽后直接返回 <b>429</b>，不会产生欠费。</div>
+      </details>
+      <details class="faq-item">
+        <summary>密钥泄露了怎么办？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+        <div class="faq-a">控制台支持双密钥并行轮换：新建密钥后，旧密钥可以继续使用 24 小时，期间把线上流量平滑迁移过去，最后手动吊销，<b>全程 0 次请求失败</b>。每个密钥还可以绑定来源 IP 白名单和月度额度上限。</div>
+      </details>
+      <details class="faq-item">
+        <summary>SLA 不达标怎么赔付？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+        <div class="faq-a">可用性低于 99.90% 时按当月费用的 10% 赔付，低于 99.00% 赔付 30%，低于 95.00% 赔付 100%。赔付金额自动计算并在 <b>T+3</b> 个工作日退回账户余额，不需要你提工单举证。2025-09 共触发 2 次，累计赔付 ¥14,860。</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CTA ===================== -->
+<!-- fix: CTA 说清楚下一步与成本，两个按钮主次分明 -->
+<section class="cta-sec wrap" id="cta" data-rule="CTA 主次分明，含具体承诺">
+  <div class="cta-panel reveal">
+    <div>
+      <h2>先在测试环境跑通，<br>再决定要不要付钱</h2>
+      <p>注册后立刻拿到 100 万 Token 的免费额度，不需要绑定支付方式。
+         14 天专业版试用期内随时可以一键降级，不会自动扣费。</p>
+    </div>
+    <div class="cta-side">
+      <a class="btn btn-accent" href="#main">
+        创建免费密钥
+        <svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg>
+      </a>
+      <a class="btn btn-ghost" href="#pricing">
+        对比全部档位
+        <svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg>
+      </a>
+      <p class="cta-fine">平均接入耗时 12 分钟 · 支持微信 / 支付宝 / 对公转账</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ===================== 页脚 ===================== -->
+<!-- fix: 页脚按信息架构分组，只保留真实入口 -->
+<footer class="site-foot" data-rule="页脚按信息架构分组，无死链堆砌">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-about">
+        <a class="brand" href="#main" aria-label="Foyton 首页">
+          <span class="brand-mark" aria-hidden="true"><i></i></span>
+          <em>Foyton</em>
+        </a>
+        <p>把 11 家厂商的 47 个模型收敛成一个接口、一份账单、一套密钥。</p>
+      </div>
+      <div class="foot-col">
+        <h4>产品</h4>
+        <a href="#features">平台能力</a>
+        <a href="#models">模型目录</a>
+        <a href="#pricing">定价</a>
+        <a href="#pricing">档位对比</a>
+      </div>
+      <div class="foot-col">
+        <h4>开发者</h4>
+        <a href="#features">快速开始</a>
+        <a href="#features">API 参考</a>
+        <a href="#features">SDK（Python / Node / Go）</a>
+        <a href="#faq">迁移指南</a>
+      </div>
+      <div class="foot-col">
+        <h4>公司</h4>
+        <a href="#cta">关于我们</a>
+        <a href="#cta">招聘</a>
+        <a href="#cta">状态页</a>
+        <a href="mailto:support@foyton.dev">联系我们</a>
+      </div>
+      <div class="foot-col">
+        <h4>条款</h4>
+        <a href="#faq">服务协议</a>
+        <a href="#faq">隐私政策</a>
+        <a href="#pricing">SLA 说明</a>
+        <a href="#faq">数据处理附录</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>
+      <span>所有系统运行正常 · 30 天可用性 99.98%</span>
+      <nav aria-label="页脚次级导航">
+        <a href="#faq">隐私</a>
+        <a href="#faq">条款</a>
+        <a href="#pricing">SLA</a>
+        <span>© 2025 Foyton Technologies</span>
+      </nav>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* --- 滚动揭示：位移 10px + 淡入，reduced-motion 下完全跳过 --- */
+  var items = document.querySelectorAll('.reveal');
+  if (!reduce && 'IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          e.target.classList.add('in');
+          io.unobserve(e.target);
+        }
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+    items.forEach(function (el) { io.observe(el); });
+  } else {
+    items.forEach(function (el) { el.classList.add('in'); });
+  }
+
+  /* --- 移动端导航：可展开、可收起、Esc 关闭、aria-expanded 同步 --- */
+  var burger = document.getElementById('burger');
+  var mobileNav = document.getElementById('mobileNav');
+  if (burger && mobileNav) {
+    var setOpen = function (open) {
+      mobileNav.classList.toggle('open', open);
+      burger.setAttribute('aria-expanded', String(open));
+      burger.setAttribute('aria-label', open ? '收起导航菜单' : '展开导航菜单');
+    };
+    burger.addEventListener('click', function () {
+      setOpen(!mobileNav.classList.contains('open'));
+    });
+    mobileNav.addEventListener('click', function (e) {
+      if (e.target.tagName === 'A') setOpen(false);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && mobileNav.classList.contains('open')) {
+        setOpen(false);
+        burger.focus();
+      }
+    });
+  }
+
+  /* --- FAQ 手风琴：一次只展开一项，但保留原生 details 语义 --- */
+  var all = document.querySelectorAll('.faq-item');
+  all.forEach(function (d) {
+    d.addEventListener('toggle', function () {
+      if (!d.open) return;
+      all.forEach(function (o) { if (o !== d) o.open = false; });
+    });
+  });
+
+  /* --- 仅供 index.html 对比外壳使用：跨文档同步滚动 ---
+     页面被 iframe 嵌入时才生效；独立打开时 parent === window，整段跳过。 */
+  if (window.parent !== window) {
+    var holding = false;
+
+    window.addEventListener('scroll', function () {
+      if (holding) return;
+      try {
+        window.parent.postMessage(
+          { type: 'foyton:scroll', side: 'after', y: window.scrollY }, '*');
+      } catch (e) { /* 静默降级 */ }
+    }, { passive: true });
+
+    window.addEventListener('message', function (e) {
+      var d = e.data;
+      if (!d || d.type !== 'foyton:sync' || d.from !== 'index') return;
+      if (Math.abs(window.scrollY - d.y) < 2) return;
+      holding = true;
+      window.scrollTo(0, d.y);
+      setTimeout(function () { holding = false; }, 70);
+    });
+  }
+})();
+</script>
+</body>
+</html>

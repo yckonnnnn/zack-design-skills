@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" width="1200" height="420" role="img" aria-label="Zack Design Skills — 让网页不像 AI 做的">
+  <defs>
+    <style>
+      .bg   { fill: #FBF9F4; }
+      .ink  { fill: #16150F; }
+      .mute { fill: #6E6A5C; }
+      .hi   { fill: #D8F32A; }
+      .t1   { font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif; font-weight: 700; }
+      .t2   { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1200" height="420"/>
+  <rect x="0" y="0" width="1200" height="6" fill="#16150F"/>
+
+  <text class="t2" x="80" y="92" font-size="16" letter-spacing="3.2" fill="#6E6A5C">ZACK · DESIGN SKILLS · V1.0</text>
+
+  <text class="t1" x="80" y="188" font-size="72" letter-spacing="-2.4" fill="#16150F">让网页不像</text>
+
+  <rect x="72" y="214" width="268" height="74" class="hi"/>
+  <text class="t1" x="80" y="272" font-size="72" letter-spacing="-2.4" fill="#16150F">AI 做的</text>
+
+  <text class="t1" x="80" y="344" font-size="21" font-weight="400" fill="#6E6A5C">8 个设计技能 · 60 条可执行判断标准</text>
+  <text class="t1" x="80" y="378" font-size="21" font-weight="400" fill="#6E6A5C">直接装进 Claude Code / Cursor / Codex</text>
+
+  <g transform="translate(752,104)">
+    <rect x="0" y="0" width="368" height="196" rx="12" fill="#16150F"/>
+    <text class="t2" x="28" y="46" font-size="15" letter-spacing="2.2" fill="#D8F32A">三条修法</text>
+    <text class="t1" x="28" y="94" font-size="26" fill="#FBF9F4">打破均匀</text>
+    <text class="t1" x="28" y="136" font-size="26" fill="#FBF9F4">建立判断</text>
+    <text class="t1" x="28" y="178" font-size="26" fill="#FBF9F4">说人话</text>
+  </g>
+
+  <text class="t2" x="752" y="352" font-size="15" letter-spacing="0.6" fill="#6E6A5C">github.com/yckonnnnn/zack-design-skills</text>
+</svg>

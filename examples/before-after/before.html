@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Foyton — 让 AI 触手可及 | 企业级 AI 大模型 API 聚合平台</title>
+<meta name="description" content="Foyton 赋能企业级智能体，一站式接入前沿大模型，开启智能新时代。">
+<style>
+  /* ============================================================
+     before.html —— 故意保留的「AI 味」反面教材
+     这份文件里的每一条都是典型的 AI 生成式样板间错误：
+     渐变滥用、居中强迫症、统一节奏、emoji 当图标、
+     假社会证明、占位数字、无焦点态、无动效降级。
+     请对照 after.html 阅读。
+     ============================================================ */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  /* 反面：通用 Inter/Roboto 栈，且没有中文回退思考 */
+  body {
+    font-family: Inter, Roboto, Arial, sans-serif;
+    color: #6B7280;            /* 反面：低对比灰正文放在纯白上 */
+    background: #FFFFFF;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4 { color: #111827; line-height: 1.3; font-weight: 700; }
+  a { color: inherit; text-decoration: none; }
+
+  /* 反面：没有任何 :focus-visible 样式，键盘用户完全迷失 */
+  a:focus, button:focus { outline: none; }
+
+  .container { max-width: 1140px; margin: 0 auto; padding: 0 24px; }
+  .container-narrow { max-width: 400px; margin: 0 auto; padding: 0 24px; }
+
+  /* 反面：每个 section 节奏完全一致，全部居中 */
+  section { padding: 96px 0; text-align: center; }
+
+  /* ---------- 公告条：<marquee> 式滚动 + 高饱和亮色 ---------- */
+  .announce {
+    background: #7C3AED;
+    color: #FFFFFF;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: 14px;
+    padding: 10px 0;
+  }
+  .announce-track {
+    display: inline-block;
+    padding-left: 100%;
+    animation: marquee 22s linear infinite;   /* 反面：无限滚动，不理会 reduced-motion */
+  }
+  .announce-track span { margin: 0 48px; }
+  @keyframes marquee {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* ---------- 导航 ---------- */
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid #F3F4F6;
+    padding: 14px 0;
+  }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 800; font-size: 20px; color: #111827;
+    letter-spacing: -0.01em;
+  }
+  .logo-mark {
+    width: 32px; height: 32px; border-radius: 9999px;
+    background: linear-gradient(135deg, #6366F1 0%, #EC4899 100%);
+  }
+  .nav-links { display: flex; align-items: center; gap: 8px; }
+  .nav-links a {
+    padding: 8px 16px; border-radius: 9999px; font-size: 14px;
+    color: #4B5563; font-weight: 500;
+    transition: all 0.3s ease-in-out;      /* 反面：all + 无意义缓动 */
+  }
+  .nav-links a:hover { background: #F3F4F6; color: #111827; }
+
+  /* ---------- 按钮 ---------- */
+  .btn {
+    display: inline-block;
+    padding: 14px 32px;
+    border-radius: 9999px;                  /* 反面：到处都是 rounded-full */
+    font-size: 16px; font-weight: 600;
+    cursor: pointer; border: none;
+    transition: all 0.3s ease-in-out;
+  }
+  /* 反面：没必要的重投影 */
+  .btn-primary {
+    background: linear-gradient(135deg, #6366F1 0%, #A855F7 50%, #EC4899 100%);
+    color: #FFFFFF;
+    box-shadow: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.1);
+  }
+  .btn-primary:hover { box-shadow: 0 20px 25px rgba(0,0,0,0.15), 0 8px 10px rgba(0,0,0,0.1); }
+  .btn-secondary {
+    background: #FFFFFF; color: #374151;
+    box-shadow: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.1);
+  }
+  .btn-secondary:hover { background: #F9FAFB; }
+  .btn-sm { padding: 10px 22px; font-size: 14px; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    /* 反面：紫→蓝→粉大面积渐变铺满首屏 */
+    background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 35%, #EC4899 100%);
+    padding: 110px 0 120px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 20% 10%, rgba(255,255,255,0.25), transparent 45%),
+                radial-gradient(circle at 85% 80%, rgba(255,255,255,0.18), transparent 40%);
+    pointer-events: none;
+  }
+  .hero .container { position: relative; z-index: 2; }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #FFFFFF;
+    font-size: 13px;
+    padding: 8px 20px;
+    border-radius: 9999px;
+    margin-bottom: 28px;
+  }
+  /* 反面：容器只有 400px，标题被挤成 5~6 行 */
+  .hero h1 {
+    font-size: 46px;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    /* 反面：渐变文字 */
+    background: linear-gradient(90deg, #FFFFFF 0%, #FDE68A 45%, #F9A8D4 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 24px;
+  }
+  .hero p.lead {
+    color: rgba(255,255,255,0.88);
+    font-size: 18px;
+    max-width: 620px;
+    margin: 0 auto 40px;
+  }
+  .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .hero-note { margin-top: 28px; font-size: 13px; color: rgba(255,255,255,0.7); }
+
+  /* ---------- 通用小标签 ---------- */
+  .meta-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #9CA3AF;
+    margin-bottom: 14px;
+  }
+  .section-title { font-size: 34px; margin-bottom: 16px; }
+  .section-sub { font-size: 17px; max-width: 640px; margin: 0 auto 56px; color: #9CA3AF; }
+
+  /* ---------- 信任背书 ---------- */
+  .trust { background: #FFFFFF; }
+  .trust-count { font-size: 22px; font-weight: 700; color: #111827; margin-bottom: 36px; }
+  .logo-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  /* 反面：5 个一模一样的灰色占位方块 */
+  .logo-box {
+    width: 132px; height: 44px;
+    background: #E5E7EB;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: #9CA3AF; font-size: 13px; font-weight: 600;
+  }
+
+  /* ---------- 特性卡 ---------- */
+  .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  /* 反面：三张完全等高、无层级、全部居中的卡片 */
+  .card {
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 16px;                 /* rounded-2xl */
+    padding: 40px 28px;
+    text-align: center;
+    transition: all 0.3s ease-in-out;
+  }
+  .card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+  .card-icon { font-size: 44px; line-height: 1; margin-bottom: 18px; }
+  .card h3 { font-size: 19px; margin-bottom: 12px; }
+  .card p { font-size: 15px; }
+
+  /* ---------- 步骤 ---------- */
+  .steps { background: #F9FAFB; }
+  .step-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .step {
+    background: #FFFFFF; border-radius: 16px; padding: 36px 24px;
+    border: 1px solid #E5E7EB;
+  }
+  .step-num {
+    width: 52px; height: 52px; border-radius: 9999px;
+    background: linear-gradient(135deg, #6366F1, #EC4899);
+    color: #FFFFFF; font-weight: 700; font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 18px;
+  }
+  .step h3 { font-size: 18px; margin-bottom: 10px; }
+  .step p { font-size: 15px; }
+
+  /* ---------- 用户评价 ---------- */
+  .quote-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .quote {
+    background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 16px;
+    padding: 32px 26px;
+  }
+  .stars { font-size: 18px; letter-spacing: 2px; margin-bottom: 16px; }
+  /* 反面：五条一模一样的五星好评，句式雷同 */
+  .quote p { font-size: 15px; margin-bottom: 20px; }
+  .quote-author { display: flex; align-items: center; gap: 12px; justify-content: center; }
+  .avatar {
+    width: 40px; height: 40px; border-radius: 9999px; background: #E5E7EB;
+    display: flex; align-items: center; justify-content: center;
+    color: #9CA3AF; font-weight: 700; font-size: 14px;
+  }
+  .quote-author strong { display: block; color: #111827; font-size: 14px; }
+  .quote-author span { font-size: 13px; color: #9CA3AF; }
+
+  /* ---------- 价格 ---------- */
+  .pricing { background: #F9FAFB; }
+  .price-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; align-items: stretch; }
+  .price-card {
+    background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 16px;
+    padding: 40px 28px; display: flex; flex-direction: column;
+  }
+  .price-card.featured {
+    border: 2px solid #8B5CF6;
+    box-shadow: 0 20px 25px rgba(0,0,0,0.1);
+    position: relative;
+  }
+  .featured-tag {
+    position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+    background: linear-gradient(135deg, #6366F1, #EC4899);
+    color: #FFFFFF; font-size: 12px; font-weight: 700;
+    padding: 6px 18px; border-radius: 9999px;
+  }
+  .price-card h3 { font-size: 18px; margin-bottom: 8px; }
+  .price-card .price-desc { font-size: 14px; color: #9CA3AF; margin-bottom: 24px; }
+  /* 反面：价格位置全是「—」，没有任何真实数字 */
+  .price-value {
+    font-size: 40px; font-weight: 800; color: #111827;
+    margin-bottom: 24px; line-height: 1;
+  }
+  .price-value small { font-size: 14px; font-weight: 500; color: #9CA3AF; }
+  .price-features { list-style: none; margin-bottom: 28px; text-align: left; flex: 1; }
+  .price-features li {
+    font-size: 14px; padding: 9px 0; border-bottom: 1px solid #F3F4F6;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .price-features li:last-child { border-bottom: none; }
+  .price-card .btn { width: 100%; text-align: center; }
+
+  /* ---------- FAQ ---------- */
+  .faq-list { max-width: 720px; margin: 0 auto; text-align: left; }
+  .faq-item {
+    background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 16px;
+    margin-bottom: 12px; overflow: hidden;
+  }
+  .faq-q {
+    width: 100%; text-align: left; background: none; border: none;
+    padding: 20px 24px; font-size: 16px; font-weight: 600; color: #111827;
+    cursor: pointer; font-family: inherit;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  }
+  /* 反面：hover 瞬间变色，零过渡 */
+  .faq-q:hover { color: #8B5CF6; }
+  .faq-a { display: none; padding: 0 24px 22px; font-size: 15px; }
+  .faq-item.open .faq-a { display: block; }
+  .faq-icon { color: #9CA3AF; font-size: 20px; }
+
+  /* ---------- 底部 CTA ---------- */
+  .cta {
+    background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 40%, #EC4899 100%);
+  }
+  .cta h2 { color: #FFFFFF; font-size: 36px; margin-bottom: 16px; }
+  .cta p { color: rgba(255,255,255,0.85); font-size: 17px; margin-bottom: 36px; }
+  .cta .btn-secondary { background: #FFFFFF; color: #6D28D9; }
+
+  /* ---------- 页脚 ---------- */
+  footer { background: #111827; color: #9CA3AF; padding: 72px 0 40px; text-align: center; }
+  .footer-logo { color: #FFFFFF; font-weight: 800; font-size: 20px; margin-bottom: 28px; }
+  /* 反面：12 个死链，没有信息架构 */
+  .footer-links {
+    display: grid; grid-template-columns: repeat(6, 1fr);
+    gap: 12px 20px; max-width: 820px; margin: 0 auto 36px;
+  }
+  .footer-links a { font-size: 14px; color: #9CA3AF; }
+  .footer-links a:hover { color: #FFFFFF; }
+  .footer-bottom {
+    border-top: 1px solid #1F2937; padding-top: 24px;
+    font-size: 13px; color: #6B7280;
+  }
+  .footer-bottom a { margin: 0 10px; }
+
+  /* ---------- 响应式 ---------- */
+  @media (max-width: 900px) {
+    .card-grid, .step-list, .quote-grid, .price-grid { grid-template-columns: 1fr; }
+    .footer-links { grid-template-columns: repeat(3, 1fr); }
+    .nav-links { display: none; }
+  }
+  @media (max-width: 480px) {
+    /* 反面：小屏也没有真正重新排版，只是把字号调小 */
+    .hero h1 { font-size: 32px; }
+    .hero { padding: 72px 0 80px; }
+    section { padding: 64px 0; }
+    .section-title { font-size: 26px; }
+    .cta h2 { font-size: 26px; }
+    .footer-links { grid-template-columns: repeat(2, 1fr); }
+    .container-narrow { padding: 0 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 公告条：亮紫色 <marquee> 式无限滚动 -->
+<div class="announce" aria-hidden="true">
+  <div class="announce-track">
+    <span>🎉 Foyton 2.0 全新上线，限时注册即送 100 万 Token！</span>
+    <span>🔥 新增 12 个前沿模型，一键接入</span>
+    <span>⚡ 算力低至 1 折起，助力企业降本增效</span>
+    <span>🎉 Foyton 2.0 全新上线，限时注册即送 100 万 Token！</span>
+    <span>🔥 新增 12 个前沿模型，一键接入</span>
+    <span>⚡ 算力低至 1 折起，助力企业降本增效</span>
+  </div>
+</div>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <div class="logo"><span class="logo-mark"></span>Foyton</div>
+    <nav class="nav-links" aria-label="主导航">
+      <a href="#">产品能力</a>
+      <a href="#">模型广场</a>
+      <a href="#">价格方案</a>
+      <a href="#">开发者文档</a>
+      <a href="#">关于我们</a>
+    </nav>
+    <a class="btn btn-primary btn-sm" href="#">立即体验</a>
+  </div>
+</header>
+
+<!-- ===================== HERO ===================== -->
+<section class="hero" data-section="hero">
+  <div class="container">
+    <div class="hero-badge">✨ 全新升级 · 赋能企业级智能体</div>
+    <div class="container-narrow">
+      <h1>赋能企业级智能体，让 AI 触手可及，开启智能新时代，引领行业变革，共创美好未来</h1>
+    </div>
+    <p class="lead">Foyton 致力于打造领先的 AI 大模型聚合平台，为企业提供一站式智能化解决方案，助力业务降本增效。</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#">了解更多</a>
+      <a class="btn btn-secondary" href="#">立即体验</a>
+    </div>
+    <p class="hero-note">无需信用卡 · 5 分钟完成接入 · 随时可取消</p>
+  </div>
+</section>
+
+<!-- ===================== 信任背书 ===================== -->
+<section class="trust" data-section="trust">
+  <div class="container">
+    <div class="meta-label">Trusted By</div>
+    <p class="trust-count">已被 1000+ 企业信赖</p>
+    <div class="logo-row">
+      <div class="logo-box">LOGO</div>
+      <div class="logo-box">LOGO</div>
+      <div class="logo-box">LOGO</div>
+      <div class="logo-box">LOGO</div>
+      <div class="logo-box">LOGO</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 特性 ===================== -->
+<section class="features" data-section="features">
+  <div class="container">
+    <div class="meta-label">Feature 01</div>
+    <h2 class="section-title">强大的核心能力</h2>
+    <p class="section-sub">我们提供行业领先的技术能力，全面赋能企业智能化转型。</p>
+    <div class="card-grid">
+      <article class="card">
+        <div class="card-icon">🚀</div>
+        <h3>极速接入</h3>
+        <p>标准化 API 接口，几分钟即可完成对接，让 AI 能力快速落地业务场景。</p>
+      </article>
+      <article class="card">
+        <div class="card-icon">⚡</div>
+        <h3>高效稳定</h3>
+        <p>分布式架构保障服务高可用，为业务提供稳定可靠的基础设施支撑。</p>
+      </article>
+      <article class="card">
+        <div class="card-icon">💡</div>
+        <h3>智能调度</h3>
+        <p>智能路由算法自动选择最优链路，全面提升请求效率与用户体验。</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 步骤 ===================== -->
+<section class="steps" data-section="steps">
+  <div class="container">
+    <div class="meta-label">Section 02 · Step 03</div>
+    <h2 class="section-title">三步开启智能之旅</h2>
+    <p class="section-sub">简单三步，即可轻松接入 Foyton 平台，开启属于你的智能化旅程。</p>
+    <div class="step-list">
+      <article class="step">
+        <div class="step-num">1</div>
+        <div class="meta-label">Step 01</div>
+        <h3>🔑 注册账号</h3>
+        <p>填写基本信息即可完成注册，无需繁琐流程，即刻开启体验。</p>
+      </article>
+      <article class="step">
+        <div class="step-num">2</div>
+        <div class="meta-label">Step 02</div>
+        <h3>🎯 获取密钥</h3>
+        <p>在控制台创建你的专属 API 密钥，灵活配置权限与额度。</p>
+      </article>
+      <article class="step">
+        <div class="step-num">3</div>
+        <div class="meta-label">Step 03</div>
+        <h3>🔥 调用模型</h3>
+        <p>替换 Base URL 即可无缝迁移，畅享前沿大模型带来的能力提升。</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 用户评价 ===================== -->
+<section class="testimonials" data-section="testimonials">
+  <div class="container">
+    <div class="meta-label">Testimonials</div>
+    <h2 class="section-title">他们都在使用 Foyton</h2>
+    <p class="section-sub">来自不同行业客户的真实反馈，见证我们的产品价值。</p>
+    <div class="quote-grid">
+      <article class="quote">
+        <div class="stars">⭐⭐⭐⭐⭐</div>
+        <p>“Foyton 让我们的 AI 应用开发效率大幅提升，团队协作更加顺畅。”</p>
+        <div class="quote-author"><div class="avatar">张</div><div><strong>张先生</strong><span>某科技公司 CTO</span></div></div>
+      </article>
+      <article class="quote">
+        <div class="stars">⭐⭐⭐⭐⭐</div>
+        <p>“Foyton 让我们的 AI 应用开发效率大幅提升，团队协作更加顺畅。”</p>
+        <div class="quote-author"><div class="avatar">李</div><div><strong>李女士</strong><span>某互联网公司 技术负责人</span></div></div>
+      </article>
+      <article class="quote">
+        <div class="stars">⭐⭐⭐⭐⭐</div>
+        <p>“Foyton 让我们的 AI 应用开发效率大幅提升，团队协作更加顺畅。”</p>
+        <div class="quote-author"><div class="avatar">王</div><div><strong>王先生</strong><span>某创业公司 创始人</span></div></div>
+      </article>
+      <article class="quote">
+        <div class="stars">⭐⭐⭐⭐⭐</div>
+        <p>“Foyton 让我们的 AI 应用开发效率大幅提升，团队协作更加顺畅。”</p>
+        <div class="quote-author"><div class="avatar">赵</div><div><strong>赵女士</strong><span>某集团 产品总监</span></div></div>
+      </article>
+      <article class="quote">
+        <div class="stars">⭐⭐⭐⭐⭐</div>
+        <p>“Foyton 让我们的 AI 应用开发效率大幅提升，团队协作更加顺畅。”</p>
+        <div class="quote-author"><div class="avatar">陈</div><div><strong>陈先生</strong><span>某科技公司 架构师</span></div></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 价格 ===================== -->
+<section class="pricing" data-section="pricing">
+  <div class="container">
+    <div class="meta-label">Section 03 · Pricing</div>
+    <h2 class="section-title">灵活的定价方案</h2>
+    <p class="section-sub">多种套餐满足不同规模团队的需求，总有一款适合你。</p>
+    <div class="price-grid">
+      <article class="price-card">
+        <h3>基础版</h3>
+        <p class="price-desc">适合个人开发者与小型项目</p>
+        <div class="price-value">—<small> /月</small></div>
+        <ul class="price-features">
+          <li>✅ 基础模型调用额度</li>
+          <li>✅ 标准技术支持</li>
+          <li>✅ 社区文档访问</li>
+          <li>✅ 基础用量统计</li>
+        </ul>
+        <a class="btn btn-secondary" href="#">联系我们</a>
+      </article>
+      <article class="price-card featured">
+        <div class="featured-tag">最受欢迎</div>
+        <h3>专业版</h3>
+        <p class="price-desc">适合成长型团队与中型企业</p>
+        <div class="price-value">—<small> /月</small></div>
+        <ul class="price-features">
+          <li>✅ 更高模型调用额度</li>
+          <li>✅ 优先技术支持</li>
+          <li>✅ 高级用量分析</li>
+          <li>✅ 团队成员管理</li>
+        </ul>
+        <a class="btn btn-primary" href="#">联系我们</a>
+      </article>
+      <article class="price-card">
+        <h3>企业版</h3>
+        <p class="price-desc">适合大型企业与定制化需求</p>
+        <div class="price-value">—<small> /月</small></div>
+        <ul class="price-features">
+          <li>✅ 不限模型调用额度</li>
+          <li>✅ 专属客户成功经理</li>
+          <li>✅ 私有化部署支持</li>
+          <li>✅ 定制化 SLA 保障</li>
+        </ul>
+        <a class="btn btn-secondary" href="#">联系我们</a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FAQ ===================== -->
+<section class="faq" data-section="faq">
+  <div class="container">
+    <div class="meta-label">Section 04 · FAQ</div>
+    <h2 class="section-title">常见问题</h2>
+    <p class="section-sub">关于 Foyton，你可能还想了解这些。</p>
+    <div class="faq-list">
+      <div class="faq-item">
+        <button class="faq-q" type="button">Foyton 是什么？<span class="faq-icon">+</span></button>
+        <div class="faq-a">Foyton 是一个 AI 大模型 API 聚合平台，为企业和开发者提供统一、便捷的模型接入服务，赋能业务创新。</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button">如何开始使用？<span class="faq-icon">+</span></button>
+        <div class="faq-a">注册账号后即可在控制台创建 API 密钥，参照文档完成接入，整个过程十分简单便捷。</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button">支持哪些模型？<span class="faq-icon">+</span></button>
+        <div class="faq-a">我们支持市面上主流的多种大语言模型，持续更新中，满足不同场景的多样化需求。</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button">如何计费？<span class="faq-icon">+</span></button>
+        <div class="faq-a">我们提供灵活的计费方式，具体价格请联系我们的销售团队获取详细报价方案。</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button">是否支持私有化部署？<span class="faq-icon">+</span></button>
+        <div class="faq-a">支持。我们可为企业客户提供私有化部署方案，欢迎联系我们的团队了解更多详情。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 底部 CTA ===================== -->
+<section class="cta" data-section="cta">
+  <div class="container">
+    <h2>开启智能新时代</h2>
+    <p>现在就加入 Foyton，与 1000+ 企业一起，引领行业变革。</p>
+    <div class="hero-actions">
+      <a class="btn btn-secondary" href="#">立即体验</a>
+      <a class="btn btn-primary" href="#">了解更多</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 页脚 ===================== -->
+<footer>
+  <div class="container">
+    <div class="footer-logo">Foyton</div>
+    <nav class="footer-links" aria-label="页脚导航">
+      <a href="#">产品介绍</a>
+      <a href="#">模型广场</a>
+      <a href="#">价格方案</a>
+      <a href="#">开发文档</a>
+      <a href="#">API 参考</a>
+      <a href="#">SDK 下载</a>
+      <a href="#">帮助中心</a>
+      <a href="#">服务状态</a>
+      <a href="#">关于我们</a>
+      <a href="#">加入我们</a>
+      <a href="#">隐私政策</a>
+      <a href="#">服务条款</a>
+    </nav>
+    <div class="footer-bottom">
+      <span>© 2025 Foyton Inc. 保留所有权利。</span>
+      <a href="#">隐私政策</a>
+      <a href="#">服务条款</a>
+      <a href="#">Cookie 设置</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  /* 反面：一个没有任何可访问性处理的 FAQ 折叠 */
+  document.querySelectorAll('.faq-q').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var item = btn.parentElement;
+      item.classList.toggle('open');
+      btn.querySelector('.faq-icon').textContent = item.classList.contains('open') ? '−' : '+';
+    });
+  });
+
+  /* 反面：没有任何 prefers-reduced-motion 判断 */
+  window.addEventListener('scroll', function () {
+    document.querySelector('.nav').style.boxShadow = window.scrollY > 10
+      ? '0 10px 15px rgba(0,0,0,0.1)'
+      : 'none';
+  });
+
+  /* ---- 仅供 index.html 对比外壳使用：跨文档同步滚动 ----
+     页面被 iframe 嵌入时才生效；独立打开时 parent === window，整段跳过。
+     两个文件里的是同一段代码（只有 SIDE 不同）。 */
+  (function () {
+    if (window.parent === window) return;
+    var SIDE = 'before';
+    var holding = false;
+
+    window.addEventListener('scroll', function () {
+      if (holding) return;
+      try {
+        window.parent.postMessage(
+          { type: 'foyton:scroll', side: SIDE, y: window.scrollY }, '*');
+      } catch (e) { /* 静默降级 */ }
+    }, { passive: true });
+
+    window.addEventListener('message', function (e) {
+      var d = e.data;
+      if (!d || d.type !== 'foyton:sync' || d.from !== 'index') return;
+      if (Math.abs(window.scrollY - d.y) < 2) return;
+      holding = true;
+      window.scrollTo(0, d.y);
+      setTimeout(function () { holding = false; }, 70);
+    });
+  })();
+</script>
+</body>
+</html>

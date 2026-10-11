@@ -1,0 +1,62 @@
+name: validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  skills:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate skill frontmatter and links
+        run: python3 scripts/validate_skills.py
+
+      # Emoji are banned in generated interfaces, not in the documentation that
+      # teaches the rule (the docs quote the anti-pattern on purpose).
+      # So this check only guards the example pages that stand in for real output.
+      - name: No emoji in the "after" example pages
+        run: |
+          python3 - <<'PY'
+          import pathlib, sys
+          targets = [
+              pathlib.Path("examples/before-after/after.html"),
+              pathlib.Path("examples/before-after/index.html"),
+          ]
+          bad = []
+          for p in targets:
+              if not p.is_file():
+                  bad.append(f"{p}: missing")
+                  continue
+              for i, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
+                  for ch in line:
+                      o = ord(ch)
+                      if 0x1F300 <= o <= 0x1FAFF or 0x2600 <= o <= 0x27BF:
+                          bad.append(f"{p}:{i}: U+{o:04X} {ch!r}")
+          if bad:
+              print("emoji found:")
+              print("\n".join(bad))
+              sys.exit(1)
+          print("no emoji in after.html / index.html")
+          PY
+
+      - name: No external network references in example pages
+        run: |
+          python3 - <<'PY'
+          import pathlib, re, sys
+          bad = []
+          for p in sorted(pathlib.Path("examples").rglob("*.html")):
+              text = p.read_text(encoding="utf-8")
+              for m in re.finditer(r'(?:src|href)\s*=\s*["\'](https?://[^"\']+)', text):
+                  bad.append(f"{p}: {m.group(1)}")
+              for m in re.finditer(r'@import\s+url\(\s*["\']?(https?://[^)"\']+)', text):
+                  bad.append(f"{p}: @import {m.group(1)}")
+          if bad:
+              print("external references found (examples must work offline):")
+              print("\n".join(bad))
+              sys.exit(1)
+          print("examples are self-contained")
+          PY

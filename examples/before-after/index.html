@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Foyton 落地页 · 改前 / 改后 — Zack Design Skills</title>
+<meta name="description" content="同一款产品、同一批信息的两个版本：左边是 AI 生成的平均水平，右边是按一套明确设计规则重写的结果。">
+<style>
+/* ==========================================================================
+   index.html — 对比外壳
+   与 after.html 共用一套设计变量：暖白底 / 暖近黑墨色 / 单一琥珀强调 /
+   发丝描边 / alpha ≤ .06 的扩散阴影 / 140–200ms 缓动
+   ========================================================================== */
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#FAF8F3;
+  --surface:#FFFFFF;
+  --surface-2:#F4F0E8;
+  --surface-3:#EBE5DA;
+  --line:rgba(23,21,15,.10);
+  --line-soft:rgba(23,21,15,.055);
+  --line-strong:rgba(23,21,15,.18);
+  --ink:#17150F;
+  --ink-2:#3B372C;
+  --muted:#6E6656;
+  --faint:#9A9182;
+  --dark:#131210;
+  --dark-line:rgba(255,255,255,.10);
+  --dark-ink:#F2EEE5;
+  --dark-muted:#A29A8B;
+  --accent:#E29A2E;
+  --accent-deep:#8A4A08;
+  --accent-soft:rgba(226,154,46,.14);
+  --accent-on-dark:#F3B75A;
+
+  --ease:cubic-bezier(.22,1,.36,1);
+  --t-fast:140ms;
+  --t-base:200ms;
+
+  --shadow-1:0 1px 2px rgba(23,21,15,.035), 0 12px 28px -16px rgba(23,21,15,.055);
+  --shadow-2:0 2px 4px rgba(23,21,15,.03), 0 30px 64px -34px rgba(23,21,15,.06);
+
+  --r-sm:8px; --r:12px; --r-lg:16px; --r-xl:20px;
+  --stage-h:660px;
+
+  --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,"Helvetica Neue",Arial,
+            "PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --font-display:ui-serif,Georgia,"Times New Roman","Songti SC","Source Han Serif SC",serif;
+  --font-mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+}
+
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--ink-2);
+  font-family:var(--font-ui);font-size:17px;line-height:1.6;
+  font-feature-settings:'kern' 1,'liga' 1;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+h1,h2,h3{font-family:var(--font-display);color:var(--ink);font-weight:600;
+  letter-spacing:-.01em;text-wrap:balance}
+p{text-wrap:pretty}
+a{color:inherit;text-decoration:none}
+ul{list-style:none}
+table{border-collapse:collapse;width:100%}
+.tnum{font-feature-settings:'kern' 1,'liga' 1,'tnum' 1;font-variant-numeric:tabular-nums}
+
+.wrap{width:100%;max-width:1440px;margin:0 auto;padding:0 32px}
+@media (max-width:600px){.wrap{padding:0 18px}}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--accent-deep);outline-offset:3px;border-radius:var(--r-sm)}
+
+.skip{position:absolute;left:16px;top:-64px;z-index:200;background:var(--ink);color:var(--bg);
+  padding:10px 18px;border-radius:var(--r-sm);font-size:14px;
+  transition:top var(--t-fast) var(--ease)}
+.skip:focus-visible{top:16px}
+
+.ic{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;
+  stroke-linecap:round;stroke-linejoin:round}
+
+/* ==========================================================================
+   页头
+   ========================================================================== */
+.top{padding:56px 0 0}
+.top-in{display:flex;align-items:center;gap:12px;font-size:13.5px;color:var(--faint)}
+.top-in .mark{width:20px;height:20px;border-radius:6px;background:var(--ink);
+  display:grid;place-items:center;flex:none}
+.top-in .mark i{width:6px;height:6px;border-radius:2px;background:var(--accent);display:block}
+.top-in b{color:var(--ink);font-weight:600}
+.top-in span{margin-left:auto}
+
+.hero{padding:26px 0 30px;display:grid;grid-template-columns:1.28fr .72fr;gap:52px;
+  align-items:end}
+.hero h1{font-size:clamp(2.1rem,4.1vw,3.4rem);line-height:1.04;letter-spacing:-.022em}
+.hero h1 em{font-style:normal;color:var(--accent-deep)}
+.hero .sub{margin-top:20px;font-size:17.5px;color:var(--muted);max-width:56ch;line-height:1.62}
+.howto{
+  border-left:2px solid var(--accent);padding:4px 0 4px 20px;
+}
+.howto h2{font-family:var(--font-ui);font-size:12.5px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--faint);font-weight:600;margin-bottom:12px}
+.howto ol{counter-reset:s;display:grid;gap:10px}
+.howto li{counter-increment:s;position:relative;padding-left:26px;font-size:14.5px;
+  color:var(--ink-2);line-height:1.55}
+.howto li::before{
+  content:counter(s);position:absolute;left:0;top:1px;
+  width:17px;height:17px;border-radius:50%;background:var(--accent-soft);
+  color:var(--accent-deep);font-size:11px;font-weight:700;
+  display:grid;place-items:center;font-family:var(--font-ui)
+}
+@media (max-width:1000px){.hero{grid-template-columns:1fr;gap:32px;align-items:start}}
+
+/* ==========================================================================
+   工具条
+   ========================================================================== */
+.toolbar{
+  position:sticky;top:0;z-index:60;
+  background:rgba(250,248,243,.9);
+  backdrop-filter:saturate(180%) blur(14px);
+  -webkit-backdrop-filter:saturate(180%) blur(14px);
+  border-top:1px solid var(--line-soft);
+  border-bottom:1px solid var(--line-soft);
+  margin-top:34px;
+}
+.toolbar-in{display:flex;align-items:center;gap:28px;flex-wrap:wrap;padding:12px 0}
+.seg{display:flex;align-items:center;gap:10px;border:0;min-width:0}
+.seg > legend{float:left;font-size:12.5px;color:var(--faint);font-weight:600;
+  letter-spacing:.03em;padding:0;margin-right:2px}
+.seg-body{display:flex;gap:2px;background:var(--surface-2);border:1px solid var(--line-soft);
+  border-radius:10px;padding:3px}
+.seg input{position:absolute;opacity:0;width:0;height:0}
+.seg label{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:7px 13px;border-radius:7px;font-size:13.5px;color:var(--muted);cursor:pointer;
+  white-space:nowrap;
+  transition:background-color var(--t-fast) var(--ease),color var(--t-fast) var(--ease),
+             box-shadow var(--t-fast) var(--ease);
+}
+.seg label:hover{color:var(--ink)}
+.seg label b{font-weight:500;font-size:11.5px;color:var(--faint);
+  font-family:var(--font-mono);letter-spacing:-.02em}
+.seg input:checked + label{background:var(--surface);color:var(--ink);font-weight:600;
+  box-shadow:0 1px 2px rgba(23,21,15,.05)}
+.seg input:checked + label b{color:var(--accent-deep)}
+.seg input:focus-visible + label{outline:2px solid var(--accent-deep);outline-offset:2px}
+
+.tool-right{margin-left:auto;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.scale-read{font-size:12.5px;color:var(--faint);font-family:var(--font-mono)}
+.switch{display:inline-flex;align-items:center;gap:9px;font-size:13.5px;color:var(--muted);
+  cursor:pointer;user-select:none}
+.switch input{position:absolute;opacity:0;width:0;height:0}
+.track{width:34px;height:19px;border-radius:99px;background:var(--surface-3);
+  border:1px solid var(--line);position:relative;flex:none;
+  transition:background-color var(--t-fast) var(--ease)}
+.track::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;
+  border-radius:50%;background:var(--surface);box-shadow:0 1px 2px rgba(23,21,15,.18);
+  transition:transform var(--t-base) var(--ease)}
+.switch input:checked + .track{background:var(--ink);border-color:var(--ink)}
+.switch input:checked + .track::after{transform:translateX(15px)}
+.switch input:focus-visible + .track{outline:2px solid var(--accent-deep);outline-offset:2px}
+.switch input:disabled + .track{opacity:.45}
+.switch.is-off{color:var(--faint)}
+
+/* ==========================================================================
+   舞台：两个 iframe
+   ========================================================================== */
+.stage-wrap{padding:26px 0 0}
+.stage{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+.stage[data-mode="before"],.stage[data-mode="after"]{grid-template-columns:1fr}
+.stage[data-mode="before"] .frame[data-side="after"],
+.stage[data-mode="after"] .frame[data-side="before"]{display:none}
+
+.frame{min-width:0}
+.frame-cap{display:flex;align-items:baseline;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.frame-cap h2{font-size:17px;letter-spacing:-.005em}
+.badge{
+  font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  padding:3px 9px;border-radius:6px;font-family:var(--font-ui);
+}
+.badge.before{background:rgba(139,92,246,.12);color:#5B21B6}
+.badge.after{background:var(--accent-soft);color:var(--accent-deep)}
+.frame-cap .note{font-size:12.5px;color:var(--faint);font-family:var(--font-mono);
+  margin-left:auto;text-align:right}
+
+.viewport{
+  position:relative;height:var(--stage-h);overflow:hidden;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-1);
+}
+.stage[data-mode="before"] .viewport,
+.stage[data-mode="after"] .viewport{height:calc(var(--stage-h) + 120px)}
+.viewport iframe{
+  position:absolute;top:0;left:0;border:0;background:var(--surface);
+  transform-origin:0 0;
+}
+/* 手机档：把 390px 的 iframe 居中并给它一个设备边框 */
+.stage[data-vw="390"] .viewport{background:var(--surface-2);
+  display:flex;justify-content:center;align-items:flex-start}
+.stage[data-vw="390"] .viewport iframe{
+  border-radius:26px;box-shadow:0 0 0 1px var(--line),var(--shadow-2);
+}
+@media (max-width:1080px){
+  .stage,.stage[data-mode="before"],.stage[data-mode="after"]{grid-template-columns:1fr;gap:26px}
+  :root{--stage-h:560px}
+}
+@media (max-width:600px){:root{--stage-h:460px}}
+
+.frames-hint{
+  margin-top:14px;font-size:13px;color:var(--faint);display:flex;align-items:center;gap:8px;
+}
+.frames-hint .ic{color:var(--accent-deep)}
+
+/* ==========================================================================
+   对照表
+   ========================================================================== */
+.changes{padding:76px 0 90px}
+.changes-head{display:flex;align-items:flex-end;gap:28px;flex-wrap:wrap;
+  padding-bottom:22px;border-bottom:1px solid var(--line-soft);margin-bottom:0}
+.changes-head h2{font-size:clamp(1.7rem,2.8vw,2.3rem);line-height:1.1}
+.changes-head p{font-size:15px;color:var(--muted);max-width:52ch;margin-left:auto}
+.tbl-wrap{border:1px solid var(--line-soft);border-top:0;border-radius:0 0 var(--r-lg) var(--r-lg);
+  overflow:hidden;background:var(--surface)}
+.tbl-scroll{overflow-x:auto}
+table.diff{min-width:900px;font-size:14.5px}
+table.diff caption{text-align:left;padding:14px 22px;font-size:12.5px;color:var(--faint);
+  border-bottom:1px solid var(--line-soft)}
+table.diff th{
+  text-align:left;padding:12px 22px;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--faint);font-weight:600;background:var(--surface-2);
+  border-bottom:1px solid var(--line-soft);
+}
+table.diff th:nth-child(1){width:20%}
+table.diff th:nth-child(2){width:26%}
+table.diff th:nth-child(3){width:26%}
+table.diff th:nth-child(4){width:28%}
+table.diff td{padding:14px 22px;border-bottom:1px solid var(--line-soft);vertical-align:top;
+  line-height:1.55}
+table.diff tbody tr:last-child td{border-bottom:0}
+table.diff tbody tr:hover{background:var(--surface-2)}
+table.diff .cat{color:var(--ink);font-weight:600}
+table.diff .b4{color:var(--muted)}
+table.diff .b4 code,table.diff .af code,table.diff .why code{
+  font-family:var(--font-mono);font-size:12.5px;background:var(--surface-2);
+  border:1px solid var(--line-soft);border-radius:5px;padding:1px 5px;color:var(--ink-2)}
+table.diff .af{color:var(--ink-2)}
+table.diff .af strong{color:var(--ink);font-weight:600}
+table.diff .why{color:var(--muted);font-size:13.5px}
+table.diff .swatch{display:inline-flex;align-items:center;gap:7px}
+table.diff .sw{width:12px;height:12px;border-radius:3px;flex:none;
+  border:1px solid rgba(23,21,15,.12)}
+.tone{display:flex;gap:3px;margin-top:6px}
+.tone i{width:16px;height:10px;border-radius:2px;display:block}
+
+/* ==========================================================================
+   页脚
+   ========================================================================== */
+.foot{background:var(--surface);border-top:1px solid var(--line-soft);padding:44px 0 30px}
+.foot-in{display:flex;align-items:center;gap:20px;flex-wrap:wrap;font-size:14px;
+  color:var(--muted)}
+.foot-in .mark{width:22px;height:22px;border-radius:6px;background:var(--ink);
+  display:grid;place-items:center;flex:none}
+.foot-in .mark i{width:7px;height:7px;border-radius:2px;background:var(--accent);display:block}
+.foot-in b{color:var(--ink);font-weight:600}
+.foot-in nav{margin-left:auto;display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.foot-in nav a{display:inline-flex;align-items:center;gap:7px;
+  transition:color var(--t-fast) var(--ease)}
+.foot-in nav a:hover{color:var(--accent-deep)}
+.foot-in nav a .ic{transition:transform var(--t-base) var(--ease)}
+.foot-in nav a:hover .ic{transform:translateX(2px)}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;
+    scroll-behavior:auto!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<a class="skip" href="#stage">跳到对比区域</a>
+
+<div class="wrap">
+  <div class="top">
+    <div class="top-in">
+      <span class="mark" aria-hidden="true"><i></i></span>
+      <b>Zack Design Skills</b>
+      <span>examples / before-after</span>
+    </div>
+  </div>
+
+  <header class="hero">
+    <div>
+      <h1>同一款 Foyton，<em>两种设计判断</em></h1>
+      <p class="sub">
+        两份文件共享同一套产品事实——同样的 47 个模型、同样的价格、同样的 SLA、同样的文案意图。
+        左边按 AI 生成的平均水平写，右边按一套写下来的设计规则重写。差别不在审美，在于有没有做决定。
+      </p>
+    </div>
+    <div class="howto">
+      <h2>怎么看这一页</h2>
+      <ol>
+        <li>先停在 <b>桌面 1440</b>，两栏左右对照，看首屏信息密度和分区节奏的差异。</li>
+        <li>切到 <b>手机 390</b>，看右侧是否真的重新排版，而不是把字号调小。</li>
+        <li>打开 <b>同步滚动</b>，两栏会停在同一个纵向位置，方便逐段比。</li>
+        <li>滚到下面的对照表，每一条都写了「为什么」。</li>
+      </ol>
+    </div>
+  </header>
+</div>
+
+<!-- ===================== 工具条 ===================== -->
+<div class="toolbar">
+  <div class="wrap toolbar-in">
+    <fieldset class="seg">
+      <legend id="lg-vw">视口宽度</legend>
+      <div class="seg-body" role="none">
+        <input type="radio" name="vw" id="vw-1440" value="1440" checked>
+        <label for="vw-1440">桌面 <b>1440</b></label>
+        <input type="radio" name="vw" id="vw-1024" value="1024">
+        <label for="vw-1024">笔记本 <b>1024</b></label>
+        <input type="radio" name="vw" id="vw-390" value="390">
+        <label for="vw-390">手机 <b>390</b></label>
+      </div>
+    </fieldset>
+
+    <fieldset class="seg">
+      <legend id="lg-mode">模式</legend>
+      <div class="seg-body" role="none">
+        <input type="radio" name="mode" id="m-both" value="both" checked>
+        <label for="m-both">对比</label>
+        <input type="radio" name="mode" id="m-before" value="before">
+        <label for="m-before">只看改前</label>
+        <input type="radio" name="mode" id="m-after" value="after">
+        <label for="m-after">只看改后</label>
+      </div>
+    </fieldset>
+
+    <div class="tool-right">
+      <span class="scale-read" id="scaleRead" aria-live="polite">缩放 100%</span>
+      <label class="switch" id="syncLabel">
+        <input type="checkbox" id="syncToggle">
+        <span class="track" aria-hidden="true"></span>
+        <span>同步滚动</span>
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 舞台 ===================== -->
+<main class="wrap stage-wrap" id="stage">
+  <div class="stage" id="stageGrid" data-mode="both" data-vw="1440">
+
+    <figure class="frame" data-side="before">
+      <figcaption class="frame-cap">
+        <span class="badge before">改前</span>
+        <h2>AI 味</h2>
+        <span class="note">Inter / Arial · 渐变铺满 · 全居中 · emoji 图标</span>
+      </figcaption>
+      <div class="viewport" id="vp-before">
+        <iframe src="before.html" title="改前版本：Foyton 落地页（AI 味样板）"
+                id="fr-before" width="1440" height="660"></iframe>
+      </div>
+    </figure>
+
+    <figure class="frame" data-side="after">
+      <figcaption class="frame-cap">
+        <span class="badge after">改后</span>
+        <h2>有判断</h2>
+        <span class="note">serif 展示字 · 单一琥珀 · 非对称 · SVG 图标</span>
+      </figcaption>
+      <div class="viewport" id="vp-after">
+        <iframe src="after.html" title="改后版本：Foyton 落地页（按设计规则重写）"
+                id="fr-after" width="1440" height="660"></iframe>
+      </div>
+    </figure>
+
+  </div>
+
+  <p class="frames-hint">
+    <svg class="ic" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 8.5v.01M12 12v4"/><circle cx="12" cy="12" r="8.5"/></svg>
+    <span>两个 iframe 都以所选宽度真实渲染后等比缩放，不是截图；可以在框内直接滚动。</span>
+  </p>
+</main>
+
+<!-- ===================== 对照表 ===================== -->
+<section class="wrap changes" id="changes">
+  <div class="changes-head">
+    <h2>21 处最显眼的改动</h2>
+    <p>每一条都对应 after.html 里的一个 <code>data-rule</code>。“为什么”写的是设计理由，不是风格偏好。</p>
+  </div>
+
+  <div class="tbl-wrap">
+    <div class="tbl-scroll">
+      <table class="diff">
+        <caption>改前（before.html）→ 改后（after.html），按视觉显著性排序</caption>
+        <thead>
+          <tr>
+            <th scope="col">项目</th>
+            <th scope="col">改前</th>
+            <th scope="col">改后</th>
+            <th scope="col">为什么</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="cat">首屏背景</td>
+            <td class="b4">紫→蓝→粉大面积渐变铺满整屏
+              <span class="tone" aria-hidden="true"><i style="background:#6366F1"></i><i style="background:#8B5CF6"></i><i style="background:#EC4899"></i></span>
+            </td>
+            <td class="af">暖白底 <code>#FAF8F3</code>，颜色只出现在图表和数据上
+              <span class="tone" aria-hidden="true"><i style="background:#FAF8F3"></i><i style="background:#E29A2E"></i><i style="background:#17150F"></i></span>
+            </td>
+            <td class="why">全屏渐变把视线拉向背景而不是内容，而且与产品本身没有任何语义关联；大色域的饱和度还会压掉正文的可读性。</td>
+          </tr>
+          <tr>
+            <td class="cat">主标题断行</td>
+            <td class="b4">46px 塞进 400px 容器，折成 6 行</td>
+            <td class="af"><code>clamp(2.75rem,6vw,5rem)</code>，桌面用 <code>&lt;br&gt;</code> 锁死 2 行</td>
+            <td class="why">标题行数是层级的第一信号。6 行的标题在视觉上退化成一段正文，用户第一眼抓不到重点。</td>
+          </tr>
+          <tr>
+            <td class="cat">标题着色</td>
+            <td class="b4">渐变文字 <code>background-clip:text</code>（白→黄→粉）</td>
+            <td class="af">单一墨色 <code>#17150F</code>，靠字号和字重分层级</td>
+            <td class="why">渐变文字在低色深屏幕和缩放下会出现色带，同时削弱字形轮廓，等于用装饰换掉可读性。</td>
+          </tr>
+          <tr>
+            <td class="cat">字体栈</td>
+            <td class="b4"><code>Inter, Roboto, Arial, sans-serif</code></td>
+            <td class="af">展示字 <code>ui-serif, Georgia</code> + 界面字 <code>-apple-system, Segoe UI</code></td>
+            <td class="why">只有一套无衬线时，所有文字重量相同，层级只能靠字号；衬线展示字与无衬线正文的对比本身就是层级。</td>
+          </tr>
+          <tr>
+            <td class="cat">首屏视觉</td>
+            <td class="b4">没有产品画面，纯文字居中</td>
+            <td class="af">SVG/CSS 手绘控制台：面积图 + 密钥表 + 延迟趋势线</td>
+            <td class="why">首屏要回答“这东西长什么样”。抽象宣言无法让人判断这是监控工具还是聊天机器人。</td>
+          </tr>
+          <tr>
+            <td class="cat">行动按钮</td>
+            <td class="b4">“了解更多” + “立即体验”，同权重，都带重投影</td>
+            <td class="af">琥珀实心主按钮 + 描边次按钮，语义明确</td>
+            <td class="why">两个视觉等价的 CTA 等于没有 CTA。用户需要知道哪一个是推荐路径。</td>
+          </tr>
+          <tr>
+            <td class="cat">圆角</td>
+            <td class="b4">所有元素 <code>rounded-full</code> / <code>rounded-2xl</code></td>
+            <td class="af">8 / 12 / 16 / 22px 四级语义圆角</td>
+            <td class="why">圆角一旦成为全局默认值，就不再传递“这是一个按钮”或“这是一个容器”的信息。</td>
+          </tr>
+          <tr>
+            <td class="cat">特性区结构</td>
+            <td class="b4">3 张等高居中的卡片，无层级</td>
+            <td class="af">变跨度 bento：7 种单元格（图 / 统计 / 代码 / 图表 / 引言 / 清单）</td>
+            <td class="why">等权重网格抹平了“哪个能力最重要”。变跨度让布局本身表达优先级，同时避免留白空洞。</td>
+          </tr>
+          <tr>
+            <td class="cat">图标</td>
+            <td class="b4">emoji 当图标，共 6 类：火箭 / 火花 / 火焰 / 灯泡 / 闪电 / 靶心</td>
+            <td class="af">1.5px 描边线性 SVG，继承 <code>currentColor</code></td>
+            <td class="why">emoji 在各系统渲染成完全不同的图形，无法继承文字颜色，也无法与描边粗细对齐。</td>
+          </tr>
+          <tr>
+            <td class="cat">小标签</td>
+            <td class="b4">“FEATURE 01 / SECTION 02 / STEP 03”</td>
+            <td class="af">语义化 eyebrow：“平台能力 / 定价 / 可用性”</td>
+            <td class="why">编号是模板的自证，为写的人服务；用户需要的是“这一段在讲什么”。</td>
+          </tr>
+          <tr>
+            <td class="cat">社会证明</td>
+            <td class="b4">5 个灰色 LOGO 占位方块 + “1000+ 企业信赖”</td>
+            <td class="af">7 个排版 wordmark，附行业注释 + 4 项带口径的统计</td>
+            <td class="why">占位方块证明的恰恰是“我没拿到授权”。排版 wordmark 至少是真实文字，且能带上使用场景。</td>
+          </tr>
+          <tr>
+            <td class="cat">数字</td>
+            <td class="b4">价格全部是“—”，三档都写“联系我们”</td>
+            <td class="af"><code>¥0</code> / <code>¥299</code> / <code>¥1,499</code>，超出单价也给出</td>
+            <td class="why">隐藏价格会让有预算的用户直接离开；给出数字反而筛掉了不匹配的线索，降低双方成本。</td>
+          </tr>
+          <tr>
+            <td class="cat">对比表</td>
+            <td class="b4">没有对比表，三档并列即全部信息</td>
+            <td class="af">12 行功能对比，数值右对齐、等宽数字</td>
+            <td class="why">没有逐项对比，“推荐”标签就只是一个视觉装饰；有了对比，推荐才成为结论。</td>
+          </tr>
+          <tr>
+            <td class="cat">客户评价</td>
+            <td class="b4">5 条文字完全相同的五星好评</td>
+            <td class="af">1 条带具体结果与职务的引言</td>
+            <td class="why">可复制的评价等于不可信。一条“季度对账从 3 天压到 40 分钟”比五颗星更有说服力。</td>
+          </tr>
+          <tr>
+            <td class="cat">分区节奏</td>
+            <td class="b4">每个 section 都是 96px 内边距 + 全居中</td>
+            <td class="af">约束容器与全幅交替，含一段全幅深色面</td>
+            <td class="why">节奏不变，滚动就失去章节感。深色面是低成本的段落分隔符，比加分割线更有效。</td>
+          </tr>
+          <tr>
+            <td class="cat">深度与投影</td>
+            <td class="b4"><code>0 10px 15px rgba(0,0,0,.1)</code> 硬投影</td>
+            <td class="af">发丝描边 <code>rgba(23,21,15,.055)</code> + alpha ≤ .06 的大模糊扩散阴影</td>
+            <td class="why">硬投影把元素“贴”在页面上，扩散阴影才是“浮”起来。深度应该来自色阶与描边，不是黑色块。</td>
+          </tr>
+          <tr>
+            <td class="cat">动效曲线</td>
+            <td class="b4"><code>transition: all .3s ease-in-out</code>，部分元素零过渡</td>
+            <td class="af">140–200ms + <code>cubic-bezier(.22,1,.36,1)</code>，只过渡具体属性</td>
+            <td class="why"><code>all</code> 会连带布局属性一起插值，触发重排掉帧；<code>ease-in-out</code> 起步慢，交互反馈会显得迟钝。</td>
+          </tr>
+          <tr>
+            <td class="cat">滚动揭示</td>
+            <td class="b4">无</td>
+            <td class="af">IntersectionObserver，位移 10px + 透明度淡入</td>
+            <td class="why">位移超过约 12px 就会被读成“元素在飞”。小幅位移只用来提示“这里是新内容”。</td>
+          </tr>
+          <tr>
+            <td class="cat">键盘可达</td>
+            <td class="b4"><code>outline: none</code>，没有任何焦点样式</td>
+            <td class="af"><code>:focus-visible</code> 琥珀描边 + 跳转链接 + <code>aria-label</code></td>
+            <td class="why">去掉 outline 而不给替代方案，等于让键盘用户彻底失去当前位置感。</td>
+          </tr>
+          <tr>
+            <td class="cat">动效降级</td>
+            <td class="b4">公告条无限滚动，完全忽略 <code>prefers-reduced-motion</code></td>
+            <td class="af">该系统偏好下关闭全部过渡、位移与动画</td>
+            <td class="why">前庭功能敏感的用户会因为持续滚动和位移动画产生不适，这是可访问性问题而非偏好问题。</td>
+          </tr>
+          <tr>
+            <td class="cat">页脚</td>
+            <td class="b4">12 个 <code>href="#"</code> 死链</td>
+            <td class="af">4 组按信息架构分类的真实入口 + 状态行</td>
+            <td class="why">死链页脚是“这个站点还不存在”的证据；分组页脚同时承担了站点地图的职责。</td>
+          </tr>
+          <tr>
+            <td class="cat">公告条</td>
+            <td class="b4">亮紫色 marquee 无限滚动，带 emoji</td>
+            <td class="af">改成导航栏内一行常驻状态：“全部区域正常 · 99.98%”</td>
+            <td class="why">滚动公告是注意力税，用户无法控制它的节奏。同样的位置用来播报系统状态，信息价值更高。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <span class="mark" aria-hidden="true"><i></i></span>
+    <span><b>Zack Design Skills</b> · examples</span>
+    <nav aria-label="页脚导航">
+      <a href="../../README.md">返回 README
+        <svg class="ic" aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+      </a>
+      <a href="before.html">before.html</a>
+      <a href="after.html">after.html</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var stage   = document.getElementById('stageGrid');
+  var readout = document.getElementById('scaleRead');
+  var syncBox = document.getElementById('syncToggle');
+  var syncLbl = document.getElementById('syncLabel');
+  var frames  = {
+    before: document.getElementById('fr-before'),
+    after:  document.getElementById('fr-after')
+  };
+  var panes = {
+    before: document.getElementById('vp-before'),
+    after:  document.getElementById('vp-after')
+  };
+
+  var state = { vw: 1440, mode: 'both', sync: false };
+  var lockUntil = 0;
+
+  /* ---------- 布局：按目标宽度真实渲染 iframe，再等比缩放进面板 ---------- */
+  function layout() {
+    var vw = state.vw;
+    var single = state.mode !== 'both';
+
+    Object.keys(frames).forEach(function (side) {
+      var frame = frames[side];
+      var pane  = panes[side];
+      if (!pane || !pane.clientWidth) return;
+
+      var pad = vw === 390 ? 32 : 0;                       /* 手机档左右留出设备边距 */
+      var avail = pane.clientWidth - 2 - pad;
+      var k = Math.min(1, avail / vw);
+
+      var paneH = pane.clientHeight - 2 - (vw === 390 ? 32 : 0);
+      var innerH = Math.max(320, Math.round(paneH / k));
+
+      var offset = Math.max(0, Math.round((pane.clientWidth - 2 - vw * k) / 2));
+
+      frame.style.width  = vw + 'px';
+      frame.style.height = innerH + 'px';
+      frame.style.transform = 'scale(' + k + ')';
+      frame.style.left = offset + 'px';
+      frame.style.top  = (vw === 390 ? 16 : 0) + 'px';
+
+      if (side === 'before') readout.textContent = '缩放 ' + Math.round(k * 100) + '%';
+    });
+
+    stage.dataset.mode = state.mode;
+    stage.dataset.vw = String(vw);
+  }
+
+  /* ---------- 控件 ---------- */
+  document.querySelectorAll('input[name="vw"]').forEach(function (r) {
+    r.addEventListener('change', function () {
+      if (!r.checked) return;
+      state.vw = parseInt(r.value, 10);
+      layout();
+    });
+  });
+
+  document.querySelectorAll('input[name="mode"]').forEach(function (r) {
+    r.addEventListener('change', function () {
+      if (!r.checked) return;
+      state.mode = r.value;
+      layout();
+    });
+  });
+
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(layout, 80);
+  });
+
+  /* 字体与滚动条出现后宽度会变，补一次 */
+  window.addEventListener('load', function () { layout(); setTimeout(layout, 240); });
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () { layout(); });
+  }
+
+  /* ---------- 同步滚动 ----------
+     通过 postMessage 通信：iframe 内是 file:// / https 都成立，
+     页面独立打开时（parent === self）这段逻辑不会被执行。 */
+  function canTalkTo(frame) {
+    try {
+      return !!frame.contentWindow;
+    } catch (e) { return false; }
+  }
+
+  var syncPossible = canTalkTo(frames.before) && canTalkTo(frames.after);
+  if (!syncPossible) {
+    syncBox.disabled = true;
+    syncLbl.classList.add('is-off');
+    syncLbl.title = '当前环境不允许 iframe 跨文档通信，同步滚动不可用';
+  }
+
+  syncBox.addEventListener('change', function () {
+    state.sync = syncBox.checked;
+    syncLbl.classList.toggle('is-off', !state.sync);
+    if (state.sync) {
+      /* 打开时先把两侧对齐到当前位置 */
+      var y = window.scrollY;
+      Object.keys(frames).forEach(function (side) {
+        post(side, y);
+      });
+    }
+  });
+
+  function post(side, y) {
+    try {
+      frames[side].contentWindow.postMessage(
+        { type: 'foyton:sync', from: 'index', y: y }, '*');
+    } catch (e) { /* 忽略：跨源环境下静默降级 */ }
+  }
+
+  /* 父页面自身也会滚动，但对比靠的是 iframe 内部滚动；
+     这里监听 iframe 发回来的位置，转发给另一侧 */
+  window.addEventListener('message', function (e) {
+    var d = e.data;
+    if (!d || d.type !== 'foyton:scroll' || !state.sync) return;
+    if (Date.now() < lockUntil) return;
+    var other = d.side === 'before' ? 'after' : 'before';
+    lockUntil = Date.now() + 90;
+    post(other, d.y);
+  });
+
+  layout();
+  requestAnimationFrame(layout);
+})();
+</script>
+</body>
+</html>

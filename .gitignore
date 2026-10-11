@@ -1,0 +1,18 @@
+# research scratch — not published
+docs/_principles-inventory.md
+docs/_*.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# editors
+.vscode/
+.idea/
+*.swp
+
+# node (some installs symlink skills into a node project)
+node_modules/
+
+# note: examples/**/preview-*.png are intentionally committed —
+# they are the screenshots the README shows.

@@ -11,6 +11,8 @@
 
 > 一套给 AI 编码工具用的设计技能包。8 个技能，60 条可执行的判断标准，专治「一眼就能看出是 AI 做的」。
 
+**[在线看效果](https://yckonnnnn.github.io/zack-design-skills/)** ｜ **[改前 / 改后直接对比](https://yckonnnnn.github.io/zack-design-skills/examples/before-after/)**
+
 ---
 
 ## 你的网站，是不是有这些毛病？
@@ -72,9 +74,9 @@
 </tr>
 </table>
 
-完整对比页在 [`examples/before-after/`](examples/before-after/)——带视口切换（桌面 / 笔记本 / 手机）、「只看改前 / 只看改后」开关，以及一张 **21 处最显眼改动**的对照表，每条都写明了「为什么这么改」。
+完整对比页 → **https://yckonnnnn.github.io/zack-design-skills/examples/before-after/** · 源码在 [`examples/before-after/`](examples/before-after/)
 
-打开方式：直接双击 `examples/before-after/index.html`，不需要服务器、不联网。
+带视口切换（桌面 / 笔记本 / 手机）、「只看改前 / 只看改后」开关，以及一张 **21 处最显眼改动**的对照表，每条都写明了「为什么这么改」。也可以直接双击本地的 `examples/before-after/index.html`——不需要服务器、不联网。
 
 ---
 

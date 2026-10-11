@@ -20,6 +20,31 @@
 | `release_downloads` | Release 附件下载次数 | Release 页每个附件旁边 |
 | `referrers` | 流量来源前 5 名 | Insights → Traffic |
 
+**空值 ≠ 0。** 空表示「没权限读到」，0 表示「读到了，确实没人操作」。这两者完全不同，别搞混。
+
+## 一个必须知道的限制
+
+GitHub 的 traffic 接口（`/traffic/*`）**不接受 Actions 自带的 `GITHUB_TOKEN`**，会返回
+`403 Resource not accessible by integration`。这不是 bug，是 GitHub 的权限设计——它只允许带 push 权限的用户令牌读取。
+
+所以默认情况下，工作流能记录的是：
+
+| 能记 | 不能记 |
+|---|---|
+| stars、forks、watchers | 浏览量、访客数 |
+| Release 附件下载次数 | 克隆次数、去重克隆人数 |
+| | 流量来源 |
+
+**想让克隆数也记进来**（这是最有价值的那个指标），做一次配置即可：
+
+1. GitHub → Settings（个人）→ Developer settings → Personal access tokens → **Fine-grained tokens** → Generate new token
+2. Repository access 只选 **`zack-design-skills`** 这一个仓库（最小权限）
+3. Permissions → Repository permissions → **Metrics: Read-only**（Metadata 会自动带上 Read）
+4. 生成后复制，去仓库 Settings → Secrets and variables → Actions → New repository secret，名字填 **`TRAFFIC_TOKEN`**
+5. 工作流下次运行时会自动改用它（`secrets.TRAFFIC_TOKEN || secrets.GITHUB_TOKEN`）
+
+**不要**用 classic token 的 `repo` 全权限——那等于把这把钥匙给了你所有仓库。用 fine-grained 只授这一个仓库、只授 Metrics 只读，是最小必要权限。
+
 ## 三条读数须知
 
 1. **`clones_unique` 是这套指标里最有价值的一个。** 它约等于「有多少人真的把这套技能装进了自己的工具」——这比 star 更接近真实使用。star 可以随手点，clone 要付出行动。
@@ -30,14 +55,12 @@
 
 ```bash
 cd zack-design-skills
-python3 scripts/traffic_snapshot.py
+python3 scripts/traffic_snapshot.py   # 本地跑会用 gh 的登录态，能读到全部字段
 ```
 
 同一天重复运行会覆盖当天那一行，不会产生重复数据。
 
-## 如果你想让 TRAFFIC_TOKEN 生效
-
-默认用 Actions 自带的 `GITHUB_TOKEN`。如果日志里出现 403，去仓库 Settings → Secrets and variables → Actions 新建一个 `TRAFFIC_TOKEN`（个人访问令牌，勾 `repo` 权限），工作流会自动改用这个。
+**本地跑反而比 Actions 完整** —— 因为 `gh` 用的是你本人的登录态，有 push 权限，traffic 接口能读。所以如果懒得配 PAT，隔几天在本地手动跑一次也能把克隆数补上。
 
 ---
 

@@ -33,6 +33,8 @@ from datetime import datetime, timezone
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "metrics" / "traffic.csv"
 
+_TRAFFIC_BLOCKED = False
+
 FIELDS = [
     "date",
     "stars",
@@ -66,13 +68,10 @@ def gh_api(path: str) -> dict | list:
             with urllib.request.urlopen(req, timeout=30) as resp:
                 return json.loads(resp.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
+            if exc.code == 403:
+                raise PermissionError(path) from exc
             body = exc.read().decode("utf-8", "replace")[:300]
-            raise SystemExit(
-                f"GitHub API {exc.code} on {path}: {body}\n"
-                "The traffic endpoints need push access. In Actions, add a "
-                "PAT with `repo` scope as the TRAFFIC_TOKEN secret and pass it "
-                "as GITHUB_TOKEN for this step."
-            ) from exc
+            raise SystemExit(f"GitHub API {exc.code} on {path}: {body}") from exc
 
     try:
         raw = subprocess.run(
@@ -81,6 +80,17 @@ def gh_api(path: str) -> dict | list:
     except (subprocess.CalledProcessError, FileNotFoundError) as exc:
         raise SystemExit(f"no GITHUB_TOKEN and gh CLI failed on {path}: {exc}") from exc
     return json.loads(raw)
+
+
+def traffic_or_blank(path: str) -> dict:
+    """Traffic endpoints need a user token with push access; the Actions
+    default GITHUB_TOKEN gets 403. Degrade to blanks instead of failing —
+    stars / forks / downloads are still worth recording."""
+    try:
+        return gh_api(path)  # type: ignore[return-value]
+    except PermissionError:
+        globals()["_TRAFFIC_BLOCKED"] = True
+        return {}
 
 
 def main() -> int:
@@ -95,12 +105,9 @@ def main() -> int:
             raise SystemExit("set GITHUB_REPOSITORY=owner/repo (or run inside the git repo with gh available)")
 
     info = gh_api(f"/repos/{repo}")
-    clones = gh_api(f"/repos/{repo}/traffic/clones")
-    views = gh_api(f"/repos/{repo}/traffic/views")
-    try:
-        referrers = gh_api(f"/repos/{repo}/traffic/popular/referrers")
-    except SystemExit:
-        referrers = []
+    clones = traffic_or_blank(f"/repos/{repo}/traffic/clones")
+    views = traffic_or_blank(f"/repos/{repo}/traffic/views")
+    referrers = traffic_or_blank(f"/repos/{repo}/traffic/popular/referrers")
 
     releases = gh_api(f"/repos/{repo}/releases")
     downloads = sum(
@@ -109,19 +116,26 @@ def main() -> int:
         for asset in rel.get("assets", [])
     )
 
+    def num(source: dict, key: str) -> str:
+        """Traffic values are blank (not 0) when the token can't read them —
+        blank means 'unknown', 0 means 'measured, nobody did it'."""
+        if not source:
+            return ""
+        return str(source.get(key, 0))
+
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     row = {
         "date": today,
         "stars": info.get("stargazers_count", 0),
         "forks": info.get("forks_count", 0),
         "watchers": info.get("subscribers_count", 0),
-        "views_total": views.get("count", 0),
-        "views_unique": views.get("uniques", 0),
-        "clones_total": clones.get("count", 0),
-        "clones_unique": clones.get("uniques", 0),
+        "views_total": num(views, "count"),
+        "views_unique": num(views, "uniques"),
+        "clones_total": num(clones, "count"),
+        "clones_unique": num(clones, "uniques"),
         "release_downloads": downloads,
         "referrers": "; ".join(
-            f"{r.get('referrer')}({r.get('count')})" for r in referrers[:5]
+            f"{r.get('referrer')}({r.get('count')})" for r in (referrers or [])[:5]
         ),
     }
 
@@ -139,10 +153,23 @@ def main() -> int:
         writer.writerows(existing)
 
     print(f"{today}  stars={row['stars']} forks={row['forks']} "
-          f"clones={row['clones_total']} ({row['clones_unique']} unique) "
-          f"views={row['views_total']} ({row['views_unique']} unique) "
+          f"clones={row['clones_total'] or 'n/a'} "
+          f"views={row['views_total'] or 'n/a'} "
           f"downloads={downloads}")
-    print(f"wrote {OUT.relative_to(ROOT)} ({len(existing)} days recorded)")
+    if _TRAFFIC_BLOCKED:
+        print(
+            "\nNOTE: the traffic endpoints returned 403, so clone/view columns are\n"
+            "blank for today. The default Actions GITHUB_TOKEN cannot read them —\n"
+            "that is a GitHub limitation, not a bug here. To record them, create a\n"
+            "fine-grained PAT scoped to this repo with `Metrics: read` and save it\n"
+            "as the TRAFFIC_TOKEN secret (Settings -> Secrets and variables -> Actions).\n"
+            "Stars / forks / release downloads above are still accurate."
+        )
+    try:
+        shown = OUT.relative_to(ROOT)
+    except ValueError:
+        shown = OUT
+    print(f"wrote {shown} ({len(existing)} days recorded)")
     return 0
 
 
